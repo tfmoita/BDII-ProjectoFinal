@@ -1,19 +1,52 @@
 {% extends 'base.html' %}
 
 {% block content %}
-Bem vindo, {{ user.username|default:'Guest' }}!
-
 <div>
     {% if user.is_authenticated %}
-        <a href="{% url 'logout' %}">Logout</a>
-        <br>
         <h3>Menu Navegação</h3>
-        <ul>
-            <li><a href="{% url 'login' %}">Criar Ordem de produção</a></li>
-            <li><a href="{% url 'login' %}">Gerir Componentes</a></li>
-            <li><a href="{% url 'login' %}">Gerir Equipamentos</a></li>
-            <li><a href="{% url 'login' %}">Gerir Fornecedores</a></li>
-            <li><a href="{% url 'login' %}">Gerir Clientes</a></li>
+<br>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Produção</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'pedidocompra_create' %}">Criar Ordem de produção</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Compras</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'pedidocompra_create' %}">Criar Ordem de compra</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Exportação de encomendas a fornecedores (JSON ou XML).</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Vendas</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Criar Ordem de produção</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos: Clientes</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Fornecedores</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Gerir Fornecedores</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Clientes</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Gerir Clientes</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Equipamentos</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'equipamento_list' %}">Gerir Equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Equipamentos: Produção</li>
+            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Equipamentos: Stock</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Componentes</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Gerir Componentes</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Importação de componentes (JSON ou XML).</li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Componentes em stocks</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Listagens</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Componentes em stocks</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Equipamentos: Produção</li>
+            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Equipamentos: Stock</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos: Clientes</a></li>
           </ul>
     
     {% else %}

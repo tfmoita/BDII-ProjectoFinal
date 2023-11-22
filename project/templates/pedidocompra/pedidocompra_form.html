@@ -1,0 +1,13 @@
+<!-- create_purchase_order.html -->
+{% extends 'base.html' %}
+
+{% block title %}Criar Oderm de Compra{% endblock %}
+
+{% block content %}
+    <h2>Criar Oderm de Compra</h2>
+    <form method="post" action="{% url 'pedidocompra_create' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Order</button>
+    </form>
+{% endblock %}

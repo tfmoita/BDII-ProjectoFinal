@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Clientes</h2>
+  <ul>
+    {% for cliente in clientes %}
+      <li><a href="{% url 'cliente_detail' pk=cliente.pk %}">{{ cliente.nomecliente }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'cliente_create' %}">Novo Cliente</a>
+{% endblock %}

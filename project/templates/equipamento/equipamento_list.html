@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Equipamentos</h2>
+  <ul>
+    {% for equipamento in equipamentos %}
+      <li><a href="{% url 'equipamento_detail' pk=equipamento.pk %}">{{ equipamento.nomeequipamento }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'equipamento_create' %}">Novo Equipamento</a>
+{% endblock %}

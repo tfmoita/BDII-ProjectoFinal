@@ -1,0 +1,11 @@
+<!-- myapp/templates/fornecedor/fornecedor_form.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <h2>{{ action }} Fornecedor</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% crispy form %}
+  </form>
+{% endblock %}

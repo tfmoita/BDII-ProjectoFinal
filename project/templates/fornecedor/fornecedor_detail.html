@@ -1,0 +1,25 @@
+<!-- fornecedor_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Fornecedor - {{ fornecedor.nomefornecedor }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ fornecedor.nomefornecedor }}</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>Email:</strong> {{ fornecedor.email }}</p>
+      <p><strong>Número de Telefone:</strong> {{ fornecedor.numerotelefonefornecedor }}</p>
+      <p><strong>Código Postal:</strong> {{ fornecedor.codigopostal }}</p>
+    </div>
+    <div class="card-footer d-flex">
+      <a href="{% url 'fornecedor_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Fornecedores</a>
+  
+      <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'fornecedor_update' pk=fornecedor.pk %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'fornecedor_delete' pk=fornecedor.pk %}">Excluir</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
