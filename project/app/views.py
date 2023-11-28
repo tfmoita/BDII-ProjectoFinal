@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm
 
 
 def index(request):
@@ -122,15 +122,79 @@ def equipamento_delete(request, pk):
         return redirect('equipamento_list')
     return render(request, 'equipamento/equipamento_confirm_delete.html', {'equipamento': equipamento})
 
-def pedidocompra_create(request):
+#Componente view
+
+def componente_list(request):
+    componentes = Componente.objects.all()
+    return render(request, 'componente/componente_list.html', {'componentes': componentes})
+
+def componente_detail(request, pk):
+    componente = get_object_or_404(Componente, pk=pk)
+    return render(request, 'componente/componente_detail.html', {'componente': componente})
+
+def componente_create(request):
     if request.method == 'POST':
-        form = PedidoCompraForm(request.POST)
+        form = ComponenteForm(request.POST)
         if form.is_valid():
             form.save()
-            # Add any additional logic or redirection here
-            return redirect('index')  # Adjust the URL name accordingly
+            return redirect('componente_list')
     else:
-        form = PedidoCompraForm()
-    return render(request, 'pedidocompra/pedidocompra_form.html', {'form': form})
+        form = ComponenteForm()
+    return render(request, 'componente/componente_form.html', {'form': form, 'action': 'Criar'})
+
+def componente_update(request, pk):
+    componente = get_object_or_404(Componente, pk=pk)
+    if request.method == 'POST':
+        form = ComponenteForm(request.POST, instance=componente)
+        if form.is_valid():
+            form.save()
+            return redirect('componente_list')
+    else:
+        form = ComponenteForm(instance=componente)
+    return render(request, 'componente/componente_form.html', {'form': form, 'action': 'Editar', 'componente': componente})
+
+def componente_delete(request, pk):
+    componente = get_object_or_404(Componente, pk=pk)
+    if request.method == 'POST':
+        componente.delete()
+        return redirect('componente_list')
+    return render(request, 'componente/componente_confirm_delete.html', {'componente': componente})
+
+#Pedido compra a fornecedor view
 
 
+def pedidocomprafornecedor_list(request):
+    pedidos = PedidoComprafornecedor.objects.all()
+    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_list.html', {'pedidos': pedidos})
+
+def pedidocomprafornecedor_detail(request, pk):
+    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
+    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_detail.html', {'pedido': pedido})
+
+def pedidocomprafornecedor_create(request):
+    if request.method == 'POST':
+        form = PedidoCompraFornecedorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('pedidocomprafornecedor_list')
+    else:
+        form = PedidoCompraFornecedorForm()
+    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_form.html', {'form': form, 'action': 'Criar'})
+
+def pedidocomprafornecedor_update(request, pk):
+    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
+    if request.method == 'POST':
+        form = PedidoCompraFornecedorForm(request.POST, instance=pedido)
+        if form.is_valid():
+            form.save()
+            return redirect('pedidocomprafornecedor_list')
+    else:
+        form = PedidoCompraFornecedorForm(instance=pedido)
+    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_form.html', {'form': form, 'action': 'Editar', 'pedido': pedido})
+
+def pedidocomprafornecedor_delete(request, pk):
+    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
+    if request.method == 'POST':
+        pedido.delete()
+        return redirect('pedidocomprafornecedor_list')
+    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_confirm_delete.html', {'pedido': pedido})

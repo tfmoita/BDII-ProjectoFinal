@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Componentes</h2>
+  <ul>
+    {% for componente in componentes %}
+      <li><a href="{% url 'componente_detail' pk=componente.pk %}">{{ componente.nomecomponente }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'componente_create' %}">Novo Componente</a>
+{% endblock %}

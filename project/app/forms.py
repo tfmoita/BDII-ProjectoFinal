@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor
+from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
@@ -54,15 +54,35 @@ class EquipamentoForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
+        
+class ComponenteForm(forms.ModelForm):
+    class Meta:
+        model = Componente
+        fields = '__all__'
+        labels = {
+            'nomecomponente': 'Nome do Componente',
+        }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
 
-class PedidoCompraForm(forms.ModelForm):
+class PedidoCompraFornecedorForm(forms.ModelForm):
     class Meta:
         model = PedidoComprafornecedor
         fields = '__all__'
         labels = {
             'idfornecedor': 'Fornecedor',
-            'datahorapedidocompra': 'Data e Hora'
+            'datahorapedidofornecedor': 'Data e Hora do Pedido',
+            'preco': 'Preço',
         }
-        
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
+
 

@@ -21,5 +21,15 @@ urlpatterns = [
     path('equipamentos/<int:pk>/update/', views.equipamento_update, name='equipamento_update'),
     path('equipamentos/<int:pk>/delete/', views.equipamento_delete, name='equipamento_delete'),
 
-    path('pedidocompra/create/', views.pedidocompra_create, name='pedidocompra_create')
+    path('componentes/', views.componente_list, name='componente_list'),
+    path('componentes/<int:pk>/', views.componente_detail, name='componente_detail'),
+    path('componentes/create/', views.componente_create, name='componente_create'),
+    path('componentes/<int:pk>/update/', views.componente_update, name='componente_update'),
+    path('componentes/<int:pk>/delete/', views.componente_delete, name='componente_delete'),
+
+    path('pedidoscomprafornecedor/', views.pedidocomprafornecedor_list, name='pedidocomprafornecedor_list'),
+    path('pedidoscomprafornecedor/<int:pk>/', views.pedidocomprafornecedor_detail, name='pedidocomprafornecedor_detail'),
+    path('pedidoscomprafornecedor/create/', views.pedidocomprafornecedor_create, name='pedidocomprafornecedor_create'),
+    path('pedidoscomprafornecedor/<int:pk>/update/', views.pedidocomprafornecedor_update, name='pedidocomprafornecedor_update'),
+    path('pedidoscomprafornecedor/<int:pk>/delete/', views.pedidocomprafornecedor_delete, name='pedidocomprafornecedor_delete')
 ]
