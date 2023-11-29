@@ -31,5 +31,17 @@ urlpatterns = [
     path('pedidoscomprafornecedor/<int:pk>/', views.pedidocomprafornecedor_detail, name='pedidocomprafornecedor_detail'),
     path('pedidoscomprafornecedor/create/', views.pedidocomprafornecedor_create, name='pedidocomprafornecedor_create'),
     path('pedidoscomprafornecedor/<int:pk>/update/', views.pedidocomprafornecedor_update, name='pedidocomprafornecedor_update'),
-    path('pedidoscomprafornecedor/<int:pk>/delete/', views.pedidocomprafornecedor_delete, name='pedidocomprafornecedor_delete')
+    path('pedidoscomprafornecedor/<int:pk>/delete/', views.pedidocomprafornecedor_delete, name='pedidocomprafornecedor_delete'),
+
+    path('pedidoscompracliente/', views.pedidocompracliente_list, name='pedidocompracliente_list'),
+    path('pedidoscompracliente/<int:pk>/', views.pedidocompracliente_detail, name='pedidocompracliente_detail'),
+    path('pedidoscompracliente/create/', views.pedidocompracliente_create, name='pedidocompracliente_create'),
+    path('pedidoscompracliente/<int:pk>/update/', views.pedidocompracliente_update, name='pedidocompracliente_update'),
+    path('pedidoscompracliente/<int:pk>/delete/', views.pedidocompracliente_delete, name='pedidocompracliente_delete'),
+
+    path('folhas_de_obra/', views.folha_de_obra_list, name='folha_de_obra_list'),
+    path('folhas_de_obra/<int:pk>/', views.folha_de_obra_detail, name='folha_de_obra_detail'),
+    path('folhas_de_obra/create/', views.folha_de_obra_create, name='folha_de_obra_create'),
+    path('folhas_de_obra/<int:pk>/update/', views.folha_de_obra_update, name='folha_de_obra_update'),
+    path('folhas_de_obra/<int:pk>/delete/', views.folha_de_obra_delete, name='folha_de_obra_delete')
 ]

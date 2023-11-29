@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente
+from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
@@ -85,4 +85,44 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
 
+class PedidoCompraclienteForm(forms.ModelForm):
+    class Meta:
+        model = PedidoCompracliente
+        fields = '__all__'
+        labels = {
+            'idcliente': 'Cliente',
+            'datahorapedidocliente': 'Data e Hora do Pedido',
+            'preco': 'Preço',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
+        self.fields['idcliente'].queryset = Cliente.objects.all()  # Substitua Cliente pelo nome do seu modelo de cliente
+        self.fields['idcliente'].label_from_instance = lambda obj: f"{obj.nomecliente}"
+
+class FolhaDeObraForm(forms.ModelForm):
+    class Meta:
+        model = FolhaDeObra
+        fields = '__all__'
+        labels = {
+            'idmaodeobra': 'Mão de Obra',
+            'idequipamento': 'Equipamento',
+            'quantidadeequipamento': 'Quantidade de Equipamento',
+            'datahorainicio': 'Data e Hora de Início',
+            'datahorafim': 'Data e Hora de Fim',
+            'idarmazem': 'Armazém',
+            'precomedio': 'Preço Médio',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
+        self.fields['idequipamento'].queryset = Equipamento.objects.all().values_list('id', 'nomeequipamento')
+        self.fields['idarmazem'].queryset = Armazem.objects.all().values_list('idarmazem', 'nomearmazem')
+        self.fields['idmaodeobra'].queryset = TrabalhadorOperario.objects.all().values_list('idmaodeobra', 'nome_operario', 'datahoramaodeobra')
 

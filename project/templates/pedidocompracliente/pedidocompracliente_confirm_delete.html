@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+  <h2>Confirmar Exclusão</h2>
+  <p>Tem a certeza que deseja excluir o pedido de compra do cliente?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
+    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'pedidocompracliente_list' %}">Cancelar</a>
+  </form>
+{% endblock %}

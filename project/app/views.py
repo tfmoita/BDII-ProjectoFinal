@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm
 
 
 def index(request):
@@ -198,3 +198,79 @@ def pedidocomprafornecedor_delete(request, pk):
         pedido.delete()
         return redirect('pedidocomprafornecedor_list')
     return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_confirm_delete.html', {'pedido': pedido})
+
+#Pedido compra a cliente view
+
+def pedidocompracliente_list(request):
+    pedidos = PedidoCompracliente.objects.all()
+    return render(request, 'pedidocompracliente/pedidocompracliente_list.html', {'pedidos': pedidos})
+
+def pedidocompracliente_detail(request, pk):
+    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
+    return render(request, 'pedidocompracliente/pedidocompracliente_detail.html', {'pedido': pedido})
+
+def pedidocompracliente_create(request):
+    if request.method == 'POST':
+        form = PedidoCompraclienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('pedidocompracliente_list')
+    else:
+        form = PedidoCompraclienteForm()
+    return render(request, 'pedidocompracliente/pedidocompracliente_form.html', {'form': form, 'action': 'Criar'})
+
+def pedidocompracliente_update(request, pk):
+    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
+    if request.method == 'POST':
+        form = PedidoCompraclienteForm(request.POST, instance=pedido)
+        if form.is_valid():
+            form.save()
+            return redirect('pedidocompracliente_list')
+    else:
+        form = PedidoCompraclienteForm(instance=pedido)
+    return render(request, 'pedidocompracliente/pedidocompracliente_form.html', {'form': form, 'action': 'Atualizar', 'pedido': pedido})
+
+def pedidocompracliente_delete(request, pk):
+    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
+    if request.method == 'POST':
+        pedido.delete()
+        return redirect('pedidocompracliente_list')
+    return render(request, 'pedidocompracliente/pedidocompracliente_confirm_delete.html', {'pedido': pedido})
+
+#folha de obra
+
+def folha_de_obra_list(request):
+    folha_de_obra = FolhaDeObra.objects.all()
+    return render(request, 'folhadeobra/folha_de_obra_list.html', {'folhadeobra': folha_de_obra})
+
+def folha_de_obra_detail(request, pk):
+    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
+    return render(request, 'folhadeobra/folha_de_obra_detail.html', {'folhadeobra': folha_de_obra})
+
+def folha_de_obra_create(request):
+    if request.method == 'POST':
+        form = FolhaDeObraForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('folha_de_obra_list')
+    else:
+        form = FolhaDeObraForm()
+    return render(request, 'folhadeobra/folha_de_obra_form.html', {'form': form, 'action': 'Criar'})
+
+def folha_de_obra_update(request, pk):
+    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
+    if request.method == 'POST':
+        form = FolhaDeObraForm(request.POST, instance=folha_de_obra)
+        if form.is_valid():
+            form.save()
+            return redirect('folha_de_obra_list')
+    else:
+        form = FolhaDeObraForm(instance=folha_de_obra)
+    return render(request, 'folha_de_obra/folha_de_obra_form.html', {'form': form, 'action': 'Atualizar', 'folha_de_obra': folha_de_obra})
+
+def folha_de_obra_delete(request, pk):
+    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
+    if request.method == 'POST':
+        folha_de_obra.delete()
+        return redirect('folha_de_obra_list')
+    return render(request, 'folha_de_obra/folha_de_obra_confirm_delete.html', {'folha_de_obra': folha_de_obra})

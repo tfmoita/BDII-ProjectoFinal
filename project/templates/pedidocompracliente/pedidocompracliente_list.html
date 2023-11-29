@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Pedidos de Compra dos Clientes{% endblock %}
+
+{% block content %}
+  <h2>Lista de Pedidos de Compra dos Clientes</h2>
+  <ul>
+    {% for pedido in pedidos %}
+      <li><a href="{% url 'pedidocompracliente_detail' pk=pedido.pk %}">Pedido #{{ pedido.pk }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'pedidocompracliente_create' %}">Novo Pedido</a>
+{% endblock %}
