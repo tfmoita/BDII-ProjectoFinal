@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Detalhes do Cliente - {{ cliente.nome }}{% endblock %}
+{% block title %}Detalhes do Cliente - {{ cliente.nomecliente }}{% endblock %}
 
 {% block content %}
   <div class="card">
     <div class="card-header">
       <h3>{{ cliente.nomecliente }}</h3>
     </div>
-    <div class="card-body">
+    <div class="card-body"> 
       <p><strong>NIF:</strong> {{ cliente.nif }}</p>
       <p><strong>Código Postal:</strong> {{ cliente.codigopostal }}</p>
       <p><strong>Número de Telefone:</strong> {{ cliente.numerotelefonecliente }}</p>

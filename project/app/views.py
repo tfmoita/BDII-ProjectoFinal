@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import connection
+from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra
 from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm
@@ -54,8 +55,23 @@ def cliente_list(request):
     return render(request, 'cliente/cliente_list.html', {'clientes': clientes})
 
 def cliente_detail(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    return render(request, 'cliente/cliente_detail.html', {'cliente': cliente})
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_cliente_read(%s, %s, %s, %s, %s, %s)",
+                       [pk, '', '', '', 0 , ''])  # Preencha os valores vazios de acordo com seus dados
+        row = cursor.fetchone()
+
+        if row:
+            cliente = {
+                'nomecliente': row[0],
+                'numerotelefonecliente': row[1],
+                'email': row[2],
+                'nif': row[3],
+                'codigopostal': row[4]
+            }
+            return render(request, 'cliente/cliente_detail.html', {'cliente': cliente})
+        else:
+            return render(request, 'cliente_not_found.html')
+
 
 def cliente_create(request):
     form = ClienteForm()
@@ -107,6 +123,7 @@ def cliente_delete(request, pk):
 
         return redirect('cliente_list')
     return render(request, 'cliente/cliente_confirm_delete.html', {'cliente' : cliente})
+
 # Equipamento views
 
 def equipamento_list(request):
