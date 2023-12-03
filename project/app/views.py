@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db import connection
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra
 from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm
@@ -57,33 +58,55 @@ def cliente_detail(request, pk):
     return render(request, 'cliente/cliente_detail.html', {'cliente': cliente})
 
 def cliente_create(request):
+    form = ClienteForm()
+
     if request.method == 'POST':
-        form = ClienteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('cliente_list')
-    else:
-        form = ClienteForm()
-    return render(request, 'cliente/cliente_form.html', {'form': form, 'action': 'Criar'})
+        # Obter dados do formulário
+        nome = request.POST.get('nomecliente')
+        telefone = request.POST.get('numerotelefonecliente')
+        email = request.POST.get('email')
+        nif = request.POST.get('nif')
+        codigo_postal = request.POST.get('codigopostal')
+
+        # Executar procedimento armazenado
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_cliente_create(%s, %s, %s, %s, %s)", [nome, telefone, email, nif, codigo_postal])
+
+        # Atualizar a listagem de clientes após a criação do novo cliente
+        clientes = Cliente.objects.all()  # Obter todos os clientes novamente
+
+        return render(request, 'cliente/cliente_list.html', {'clientes': clientes})
+
+    return render(request, 'cliente/cliente_form.html', {'form': form})
+
 
 def cliente_update(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
+    form = ClienteForm(instance=cliente)
+
     if request.method == 'POST':
-        form = ClienteForm(request.POST, instance=cliente)
-        if form.is_valid():
-            form.save()
-            return redirect('cliente_list')
-    else:
-        form = ClienteForm(instance=cliente)
-    return render(request, 'cliente/cliente_form.html', {'form': form, 'action': 'Editar'})
+        nome = request.POST.get('nomecliente')
+        telefone = request.POST.get('numerotelefonecliente')
+        email = request.POST.get('email')
+        nif = request.POST.get('nif')
+        codigo_postal = request.POST.get('codigopostal')
+
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_cliente_update(%s, %s, %s, %s, %s, %s)", [pk, nome, telefone, email, nif, codigo_postal])
+
+        return redirect('cliente_list')
+    
+    return render(request, 'cliente/cliente_form.html', {'form' : form, 'action' : 'Atualizar', 'cliente' : cliente})
 
 def cliente_delete(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
-    if request.method == 'POST':
-        cliente.delete()
-        return redirect('cliente_list')
-    return render(request, 'cliente/cliente_confirm_delete.html', {'cliente': cliente})
 
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_cliente_delete(%s), [pk]")
+
+        return redirect('cliente_list')
+    return render(request, 'cliente/cliente_confirm_delete.html', {'cliente' : cliente})
 # Equipamento views
 
 def equipamento_list(request):

@@ -122,7 +122,5 @@ class FolhaDeObraForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
-        self.fields['idequipamento'].queryset = Equipamento.objects.all().values_list('id', 'nomeequipamento')
-        self.fields['idarmazem'].queryset = Armazem.objects.all().values_list('idarmazem', 'nomearmazem')
-        self.fields['idmaodeobra'].queryset = TrabalhadorOperario.objects.all().values_list('idmaodeobra', 'nome_operario', 'datahoramaodeobra')
+        
 
