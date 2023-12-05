@@ -51,8 +51,13 @@ def fornecedor_delete(request, pk):
 # Cliente views
 
 def cliente_list(request):
-    clientes = Cliente.objects.all()
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_cliente_read_all()")
+        cursor.execute("FETCH ALL FROM p_clientes")
+        clientes = cursor.fetchall()
+
     return render(request, 'cliente/cliente_list.html', {'clientes': clientes})
+
 
 def cliente_detail(request, pk):
     with connection.cursor() as cursor:
