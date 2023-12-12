@@ -3,20 +3,20 @@
 {% block title %}Detalhes do Pedido de Compra do Cliente{% endblock %}
 
 {% block content %}
-  <div class="card">
+  <div class="card">  
     <div class="card-header">
         <h3>Pedido #{{ pedido.idpedidocompracliente }}</h3>
-    </div>
+    </div> 
     <div class="card-body">
         <p><strong>Cliente:</strong> {{ pedido.idcliente.nomecliente }}</p>
         <p><strong>Data e Hora do Pedido:</strong> {{ pedido.datahorapedidocliente }}</p>
         <p><strong>Preço:</strong> {{ pedido.preco }}</p>
     </div>
-    <div class="card-footer d-flex">
-        <a href="{% url 'pedidocompracliente_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
+    <div class="card-footer d-flex">  
+        <a href="{% url 'pedido_compracliente_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
         <div class="ml-auto">
-          <a href="{% url 'pedidocompracliente_update' pk=pedido.pk %}" class="btn btn-warning btn-sm">Editar</a>
-          <a href="{% url 'pedidocompracliente_delete' pk=pedido.pk %}" class="btn btn-danger btn-sm">Excluir</a>
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'pedido_compracliente_update' pk=pedido.idpedidocompracliente %}">Editar</a>
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'pedido_compracliente_delete' pk=pedido.idpedidocompracliente %}">Excluir</a>
         </div>
     </div>
   </div>

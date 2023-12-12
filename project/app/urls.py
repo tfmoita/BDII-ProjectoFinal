@@ -15,17 +15,18 @@ urlpatterns = [
     path('cliente/<int:pk>/update/', views.cliente_update, name='cliente_update'),
     path('cliente/<int:pk>/delete/', views.cliente_delete, name='cliente_delete'),
 
+
     path('equipamentos/', views.equipamento_list, name='equipamento_list'),
-    path('equipamentos/<int:pk>/', views.equipamento_detail, name='equipamento_detail'),
-    path('equipamentos/create/', views.equipamento_create, name='equipamento_create'),
-    path('equipamentos/<int:pk>/update/', views.equipamento_update, name='equipamento_update'),
-    path('equipamentos/<int:pk>/delete/', views.equipamento_delete, name='equipamento_delete'),
+    path('equipamento/<int:pk>/', views.equipamento_detail, name='equipamento_detail'),
+    path('equipamento/create/', views.equipamento_create, name='equipamento_create'),
+    path('equipamento/<int:pk>/update/', views.equipamento_update, name='equipamento_update'),
+    path('equipamento/<int:pk>/delete/', views.equipamento_delete, name='equipamento_delete'),
 
     path('componentes/', views.componente_list, name='componente_list'),
-    path('componentes/<int:pk>/', views.componente_detail, name='componente_detail'),
-    path('componentes/create/', views.componente_create, name='componente_create'),
-    path('componentes/<int:pk>/update/', views.componente_update, name='componente_update'),
-    path('componentes/<int:pk>/delete/', views.componente_delete, name='componente_delete'),
+    path('componente/<int:pk>/', views.componente_detail, name='componente_detail'),
+    path('componente/create/', views.componente_create, name='componente_create'),
+    path('componente/<int:pk>/update/', views.componente_update, name='componente_update'),
+    path('componente/<int:pk>/delete/', views.componente_delete, name='componente_delete'),
 
     path('pedidoscomprafornecedor/', views.pedidocomprafornecedor_list, name='pedidocomprafornecedor_list'),
     path('pedidoscomprafornecedor/<int:pk>/', views.pedidocomprafornecedor_detail, name='pedidocomprafornecedor_detail'),
@@ -33,11 +34,11 @@ urlpatterns = [
     path('pedidoscomprafornecedor/<int:pk>/update/', views.pedidocomprafornecedor_update, name='pedidocomprafornecedor_update'),
     path('pedidoscomprafornecedor/<int:pk>/delete/', views.pedidocomprafornecedor_delete, name='pedidocomprafornecedor_delete'),
 
-    path('pedidoscompracliente/', views.pedidocompracliente_list, name='pedidocompracliente_list'),
-    path('pedidoscompracliente/<int:pk>/', views.pedidocompracliente_detail, name='pedidocompracliente_detail'),
-    path('pedidoscompracliente/create/', views.pedidocompracliente_create, name='pedidocompracliente_create'),
-    path('pedidoscompracliente/<int:pk>/update/', views.pedidocompracliente_update, name='pedidocompracliente_update'),
-    path('pedidoscompracliente/<int:pk>/delete/', views.pedidocompracliente_delete, name='pedidocompracliente_delete'),
+    path('pedidoscompracliente/', views.pedido_compracliente_list, name='pedido_compracliente_list'),
+    path('pedidocompracliente/<int:pk>/', views.pedido_compracliente_detail, name='pedido_compracliente_detail'),
+    path('pedidocompracliente/create/', views.pedido_compracliente_create, name='pedido_compracliente_create'),
+    path('pedidocompracliente/<int:pk>/update/', views.pedido_compracliente_update, name='pedido_compracliente_update'),
+    path('pedidocompracliente/<int:pk>/delete/', views.pedido_compracliente_delete, name='pedido_compracliente_delete'),
 
     path('folhas_de_obra/', views.folha_de_obra_list, name='folha_de_obra_list'),
     path('folhas_de_obra/<int:pk>/', views.folha_de_obra_detail, name='folha_de_obra_detail'),

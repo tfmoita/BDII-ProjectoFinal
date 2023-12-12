@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import connection
+from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra
 from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm
-
+from datetime import datetime
 
 def index(request):
     return render(request, 'index.html')
@@ -13,51 +14,105 @@ def index(request):
 # Fornecedor views:
 
 def fornecedor_list(request):
-    fornecedores = Fornecedor.objects.all()
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_fornecedor()')
+        columns = [col[0] for col in cursor.description]
+        fornecedores = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
     return render(request, 'fornecedor/fornecedor_list.html', {'fornecedores': fornecedores})
 
 def fornecedor_detail(request, pk):
-    fornecedor = get_object_or_404(Fornecedor, pk=pk)
-    return render(request, 'fornecedor/fornecedor_detail.html', {'fornecedor': fornecedor})
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_fornecedor_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])  
+        row = cursor.fetchone()
+
+        if row:
+            fornecedor = {
+                'nomefornecedor': row[0],
+                'email': row[1],
+                'numerotelefonefornecedor': row[2],
+                'codigopostal': row[3],
+                'idfornecedor': pk
+            }
+            return render(request, 'fornecedor/fornecedor_detail.html', {'fornecedor': fornecedor})
+
+        raise Http404("Fornecedor does not exist")
 
 def fornecedor_create(request):
+    form = FornecedorForm()
+
     if request.method == 'POST':
         form = FornecedorForm(request.POST)
         if form.is_valid():
-            form.save()
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_fornecedor_create(%s, %s, %s, %s)", [data['nomefornecedor'], data['email'], data['numerotelefonefornecedor'], data['codigopostal']])
             return redirect('fornecedor_list')
-    else:
-        form = FornecedorForm()
-    return render(request, 'fornecedor/fornecedor_form.html', {'form': form, 'action': 'Criar'})
+
+    return render(request, 'fornecedor/fornecedor_form.html', {'form': form})
 
 def fornecedor_update(request, pk):
-    fornecedor = get_object_or_404(Fornecedor, pk=pk)
-    if request.method == 'POST':
-        form = FornecedorForm(request.POST, instance=fornecedor)
-        if form.is_valid():
-            form.save()
-            return redirect('fornecedor_list')
-    else:
-        form = FornecedorForm(instance=fornecedor)
-    return render(request, 'fornecedor/fornecedor_form.html', {'form': form, 'action': 'Editar'})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_fornecedor_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            row = cursor.fetchone()
+
+            if row:
+                fornecedor_data = {
+                    'nomefornecedor': row[0],
+                    'email': row[1],
+                    'numerotelefonefornecedor': row[2],
+                    'codigopostal': row[3],
+                }
+                form = FornecedorForm(initial=fornecedor_data)
+
+                if request.method == 'POST':
+                    form = FornecedorForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_fornecedor_update(%s, %s, %s, %s, %s)", [pk, data['nomefornecedor'], data['email'], data['numerotelefonefornecedor'], data['codigopostal']])
+                        return redirect('fornecedor_list')
+                else:
+                    return render(request, 'fornecedor/fornecedor_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Fornecedor does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
 
 def fornecedor_delete(request, pk):
-    fornecedor = get_object_or_404(Fornecedor, pk=pk)
-    if request.method == 'POST':
-        fornecedor.delete()
-        return redirect('fornecedor_list')
-    return render(request, 'fornecedor/fornecedor_confirm_delete.html', {'fornecedor': fornecedor})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_fornecedor_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            row = cursor.fetchone()
+
+            if row:
+                fornecedor = get_object_or_404(Fornecedor, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_fornecedor_delete(%s)", [pk])
+                    return redirect('fornecedor_list')
+                else:
+                    return render(request, 'fornecedor/fornecedor_confirm_delete.html', {'fornecedor': fornecedor})
+            else:
+                raise Http404("Fornecedor does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+
 
 # Cliente views
 
 def cliente_list(request):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_cliente_read_all()")
-        cursor.execute("FETCH ALL FROM p_clientes")
-        clientes = cursor.fetchall()
+        cursor.execute('SELECT * FROM fn_listar_cliente()')
+        columns = [col[0] for col in cursor.description]
+        clientes = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     return render(request, 'cliente/cliente_list.html', {'clientes': clientes})
-
 
 def cliente_detail(request, pk):
     with connection.cursor() as cursor:
@@ -71,11 +126,11 @@ def cliente_detail(request, pk):
                 'numerotelefonecliente': row[1],
                 'email': row[2],
                 'nif': row[3],
-                'codigopostal': row[4]
+                'codigopostal': row[4],
+                'idcliente': pk
             }
             return render(request, 'cliente/cliente_detail.html', {'cliente': cliente})
-        else:
-            return render(request, 'cliente_not_found.html')
+        
 
 
 def cliente_create(request):
@@ -102,108 +157,260 @@ def cliente_create(request):
 
 
 def cliente_update(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-    form = ClienteForm(instance=cliente)
+    # Recupere os dados do cliente usando a conexão ou ORM do Django
 
-    if request.method == 'POST':
-        nome = request.POST.get('nomecliente')
-        telefone = request.POST.get('numerotelefonecliente')
-        email = request.POST.get('email')
-        nif = request.POST.get('nif')
-        codigo_postal = request.POST.get('codigopostal')
-
+    try:
+        # Recupere os dados do cliente
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_cliente_update(%s, %s, %s, %s, %s, %s)", [pk, nome, telefone, email, nif, codigo_postal])
+            cursor.execute("CALL sp_cliente_read(%s, %s, %s, %s, %s, %s)", [pk, '', '', '', 0, ''])
+            row = cursor.fetchone()
 
-        return redirect('cliente_list')
-    
-    return render(request, 'cliente/cliente_form.html', {'form' : form, 'action' : 'Atualizar', 'cliente' : cliente})
+            if row:
+                cliente_data = {
+                    'nomecliente': row[0],
+                    'numerotelefonecliente': row[1],
+                    'email': row[2],
+                    'nif': row[3],
+                    'codigopostal': row[4]
+                }
+                # Inicialize o formulário com os dados do cliente
+                form = ClienteForm(initial=cliente_data)
+
+                if request.method == 'POST':
+                    # Atualize o formulário com os dados recebidos
+                    form = ClienteForm(request.POST)
+                    if form.is_valid():
+                        # Se o formulário for válido, atualize os dados no banco
+                        data = form.cleaned_data
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_cliente_update(%s, %s, %s, %s, %s, %s)",
+                                           [pk, data['nomecliente'], data['numerotelefonecliente'],
+                                            data['email'], data['nif'], data['codigopostal']])
+                        return redirect('cliente_list')
+                else:
+                    # Se for uma requisição GET, renderize o formulário
+                    return render(request, 'cliente/cliente_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Cliente does not exist")
+
+    except Exception as e:
+        # Lide com exceções conforme necessário
+        print(e)  # Apenas para depuração, você pode usar um logger aqui
+        raise Http404("Erro ao processar a solicitação")
+
+# Resto do código
+
 
 def cliente_delete(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
-
-    if request.method == 'POST':
+    try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_cliente_delete(%s), [pk]")
+            # Verifica se o cliente existe
+            cursor.execute("CALL sp_cliente_read(%s, %s, %s, %s, %s, %s)", [pk, '', '', '', 0, ''])
+            row = cursor.fetchone()
 
-        return redirect('cliente_list')
-    return render(request, 'cliente/cliente_confirm_delete.html', {'cliente' : cliente})
+            if row:
+                cliente = Cliente.objects.get(pk=pk)  # Recupera o objeto Cliente a ser deletado
+
+                if request.method == 'POST':
+                    # Executa o procedimento armazenado para deletar o cliente
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_cliente_delete(%s)", [pk])
+                    
+                    return redirect('cliente_list')
+                else:
+                    # Se for uma requisição GET, renderiza a confirmação de exclusão
+                    return render(request, 'cliente/cliente_confirm_delete.html', {'cliente': cliente})
+            else:
+                raise Http404("Cliente does not exist")
+
+    except Exception as e:
+        print(e)  # Log do erro para depuração
+        raise Http404("Erro ao processar a solicitação")
 
 # Equipamento views
 
 def equipamento_list(request):
-    equipamentos = Equipamento.objects.all()
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_equipamento()')
+        columns = [col[0] for col in cursor.description]
+        equipamentos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
     return render(request, 'equipamento/equipamento_list.html', {'equipamentos': equipamentos})
 
 def equipamento_detail(request, pk):
-    equipamento = get_object_or_404(Equipamento, pk=pk)
-    return render(request, 'equipamento/equipamento_detail.html', {'equipamento': equipamento})
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_equipamento_read(%s, %s, %s)", [pk, '', ''])  # Ajuste conforme necessário
+        row = cursor.fetchone()
+
+        if row:
+            equipamento = {
+                'nomeequipamento': row[0],
+                'descricao': row[1],
+                'idequipamento': pk
+                # Adicione outros campos conforme necessário
+            }
+            return render(request, 'equipamento/equipamento_detail.html', {'equipamento': equipamento})
+
+        raise Http404("Equipamento does not exist")
 
 def equipamento_create(request):
+    form = EquipamentoForm()
+
     if request.method == 'POST':
         form = EquipamentoForm(request.POST)
         if form.is_valid():
-            form.save()
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_equipamento_create(%s, %s)", [data['nomeequipamento'], data['descricao']])
             return redirect('equipamento_list')
-    else:
-        form = EquipamentoForm()
-    return render(request, 'equipamento/equipamento_form.html', {'form': form, 'action': 'Criar'})
+
+    return render(request, 'equipamento/equipamento_form.html', {'form': form})
 
 def equipamento_update(request, pk):
-    equipamento = get_object_or_404(Equipamento, pk=pk)
-    if request.method == 'POST':
-        form = EquipamentoForm(request.POST, instance=equipamento)
-        if form.is_valid():
-            form.save()
-            return redirect('equipamento_list')
-    else:
-        form = EquipamentoForm(instance=equipamento)
-    return render(request, 'equipamento/equipamento_form.html', {'form': form, 'action': 'Editar'})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_equipamento_read(%s, %s, %s)", [pk, '', ''])
+            row = cursor.fetchone()
+
+            if row:
+                equipamento_data = {
+                    'nomeequipamento': row[0],
+                    'descricao': row[1],
+                    # Adicione outros campos conforme necessário
+                }
+                form = EquipamentoForm(initial=equipamento_data)
+
+                if request.method == 'POST':
+                    form = EquipamentoForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        
+                        # Execute este procedimento para verificar a passagem de valores
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_equipamento_update(%s, %s, %s)", [pk, data['nomeequipamento'], data['descricao']])
+                        return redirect('equipamento_list')
+                else:
+                    return render(request, 'equipamento/equipamento_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Equipamento does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
 
 def equipamento_delete(request, pk):
-    equipamento = get_object_or_404(Equipamento, pk=pk)
-    if request.method == 'POST':
-        equipamento.delete()
-        return redirect('equipamento_list')
-    return render(request, 'equipamento/equipamento_confirm_delete.html', {'equipamento': equipamento})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_equipamento_read(%s, %s, %s)", [pk, '', ''])
+            row = cursor.fetchone()
+
+            if row:
+                equipamento = get_object_or_404(Equipamento, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_equipamento_delete(%s)", [pk])
+                    return redirect('equipamento_list')
+                else:
+                    return render(request, 'equipamento/equipamento_confirm_delete.html', {'equipamento': equipamento})
+            else:
+                raise Http404("Equipamento does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
 
 #Componente view
 
 def componente_list(request):
-    componentes = Componente.objects.all()
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_componente()')
+        columns = [col[0] for col in cursor.description]
+        componentes = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
     return render(request, 'componente/componente_list.html', {'componentes': componentes})
 
 def componente_detail(request, pk):
-    componente = get_object_or_404(Componente, pk=pk)
-    return render(request, 'componente/componente_detail.html', {'componente': componente})
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_componente_read(%s, %s)", [pk, ''])  # Ajuste conforme necessário
+        row = cursor.fetchone()
+
+        if row:
+            componente = {
+                'nomecomponente': row[0],
+                'idcomponente': pk
+                # Adicione outros campos conforme necessário
+            }
+            return render(request, 'componente/componente_detail.html', {'componente': componente})
+
+        raise Http404("Componente does not exist")
 
 def componente_create(request):
+    form = ComponenteForm()
+
     if request.method == 'POST':
         form = ComponenteForm(request.POST)
         if form.is_valid():
-            form.save()
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_componente_create(%s)", [data['nomecomponente']])
             return redirect('componente_list')
-    else:
-        form = ComponenteForm()
-    return render(request, 'componente/componente_form.html', {'form': form, 'action': 'Criar'})
+
+    return render(request, 'componente/componente_form.html', {'form': form})
 
 def componente_update(request, pk):
-    componente = get_object_or_404(Componente, pk=pk)
-    if request.method == 'POST':
-        form = ComponenteForm(request.POST, instance=componente)
-        if form.is_valid():
-            form.save()
-            return redirect('componente_list')
-    else:
-        form = ComponenteForm(instance=componente)
-    return render(request, 'componente/componente_form.html', {'form': form, 'action': 'Editar', 'componente': componente})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_componente_read(%s, %s)", [pk, ''])
+            row = cursor.fetchone()
+
+            if row:
+                componente_data = {
+                    'nomecomponente': row[0]
+                    # Adicione outros campos conforme necessário
+                }
+                form = ComponenteForm(initial=componente_data)
+
+                if request.method == 'POST':
+                    form = ComponenteForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        print("Valor de pk:", pk)
+                        print("Valor de data['nomecomponente']:", data['nomecomponente'])  # Verifica o valor de 'nomecomponente'
+                        
+                        # Execute este procedimento para verificar a passagem de valores
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_componente_update(%s, %s)", [pk, data['nomecomponente']])
+                        return redirect('componente_list')
+                else:
+                    return render(request, 'componente/componente_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Componente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
 
 def componente_delete(request, pk):
-    componente = get_object_or_404(Componente, pk=pk)
-    if request.method == 'POST':
-        componente.delete()
-        return redirect('componente_list')
-    return render(request, 'componente/componente_confirm_delete.html', {'componente': componente})
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_componente_read(%s, %s)", [pk, ''])
+            row = cursor.fetchone()
+
+            if row:
+                componente = get_object_or_404(Componente, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_componente_delete(%s)", [pk])
+                    return redirect('componente_list')
+                else:
+                    return render(request, 'componente/componente_confirm_delete.html', {'componente': componente})
+            else:
+                raise Http404("Componente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+
 
 #Pedido compra a fornecedor view
 
@@ -246,41 +453,95 @@ def pedidocomprafornecedor_delete(request, pk):
 
 #Pedido compra a cliente view
 
-def pedidocompracliente_list(request):
-    pedidos = PedidoCompracliente.objects.all()
-    return render(request, 'pedidocompracliente/pedidocompracliente_list.html', {'pedidos': pedidos})
+def pedido_compracliente_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_pedido_compracliente()')
+        columns = [col[0] for col in cursor.description]
+        pedidos_compra_cliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-def pedidocompracliente_detail(request, pk):
-    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
-    return render(request, 'pedidocompracliente/pedidocompracliente_detail.html', {'pedido': pedido})
+    return render(request, 'pedido_compracliente/pedido_compracliente_list.html', {'pedidos_compra_cliente': pedidos_compra_cliente})
 
-def pedidocompracliente_create(request):
+def pedido_compracliente_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
+        row = cursor.fetchone()
+
+        if row:
+            pedido_compra_cliente = {
+                'idcliente': row[0],  # Substitua pelos campos corretos
+                'datahorapedidocliente': row[1],
+                'preco': row[2],
+                'idpedidocompracliente': pk
+            }
+            return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
+
+        raise Http404("Pedido de Compra do Cliente does not exist")
+
+def pedido_compracliente_create(request):
+    form = PedidoCompraclienteForm()
+
     if request.method == 'POST':
         form = PedidoCompraclienteForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('pedidocompracliente_list')
-    else:
-        form = PedidoCompraclienteForm()
-    return render(request, 'pedidocompracliente/pedidocompracliente_form.html', {'form': form, 'action': 'Criar'})
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cliente_id = data['idcliente'].idcliente  # Assumindo que 'id' é o campo de ID do modelo Cliente
+                datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
+                cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [cliente_id, datahora_formatada, data['preco']])
+            return redirect('pedido_compracliente_list')
 
-def pedidocompracliente_update(request, pk):
-    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
-    if request.method == 'POST':
-        form = PedidoCompraclienteForm(request.POST, instance=pedido)
-        if form.is_valid():
-            form.save()
-            return redirect('pedidocompracliente_list')
-    else:
-        form = PedidoCompraclienteForm(instance=pedido)
-    return render(request, 'pedidocompracliente/pedidocompracliente_form.html', {'form': form, 'action': 'Atualizar', 'pedido': pedido})
+    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
 
-def pedidocompracliente_delete(request, pk):
-    pedido = get_object_or_404(PedidoCompracliente, pk=pk)
-    if request.method == 'POST':
-        pedido.delete()
-        return redirect('pedidocompracliente_list')
-    return render(request, 'pedidocompracliente/pedidocompracliente_confirm_delete.html', {'pedido': pedido})
+def pedido_compracliente_update(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            row = cursor.fetchone()
+
+            if row:
+                pedido_compra_cliente_data = {
+                    'idcliente': row[0],
+                    'datahorapedidocliente': row[1],
+                    'preco': row[2],
+                }
+                form = PedidoCompraclienteForm(initial=pedido_compra_cliente_data)
+
+                if request.method == 'POST':
+                    form = PedidoCompraclienteForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, data['idcliente'], data['datahorapedidocliente'], data['preco']])
+                        return redirect('pedido_compracliente_list')
+                else:
+                    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Pedido de Compra do Cliente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+
+def pedido_compracliente_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            row = cursor.fetchone()
+
+            if row: 
+                pedido_compra_cliente = get_object_or_404(PedidoCompracliente, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_pedido_compracliente_delete(%s)", [pk])
+                    return redirect('pedido_compracliente_list')
+                else:
+                    return render(request, 'pedido_compracliente/pedido_compracliente_confirm_delete.html', {'pedido_compra_cliente': pedido_compra_cliente})
+            else:
+                raise Http404("Pedido de Compra do Cliente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
 
 #folha de obra
 

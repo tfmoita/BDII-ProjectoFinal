@@ -15,8 +15,8 @@
       <a href="{% url 'equipamento_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Equipamentos</a>
   
       <div class="ml-auto">
-          <a type="button" class="btn btn-warning btn-sm" href="{% url 'equipamento_update' pk=equipamento.pk %}">Editar</a>
-          <a type="button" class="btn btn-danger btn-sm" href="{% url 'equipamento_delete' pk=equipamento.pk %}">Excluir</a>
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'equipamento_update' pk=equipamento.idequipamento %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'equipamento_delete' pk=equipamento.idequipamento %}">Excluir</a>
       </div>
     </div>
   </div>
