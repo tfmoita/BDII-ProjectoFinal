@@ -8,6 +8,6 @@
   <form method="post">
     {% csrf_token %}
     <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
-    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'pedidocompracliente_list' %}">Cancelar</a>
+    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'pedido_compracliente_list' %}">Cancelar</a>
   </form>
 {% endblock %}

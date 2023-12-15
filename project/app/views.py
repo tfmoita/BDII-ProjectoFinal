@@ -467,8 +467,13 @@ def pedido_compracliente_detail(request, pk):
         row = cursor.fetchone()
 
         if row:
+            idcliente = row[0]
+            cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
+            nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
+
             pedido_compra_cliente = {
-                'idcliente': row[0],  # Substitua pelos campos corretos
+                'idcliente': idcliente,
+                'nomecliente': nomecliente,
                 'datahorapedidocliente': row[1],
                 'preco': row[2],
                 'idpedidocompracliente': pk
@@ -495,14 +500,20 @@ def pedido_compracliente_create(request):
 def pedido_compracliente_update(request, pk):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
             row = cursor.fetchone()
 
             if row:
+                idcliente = row[0]
+                cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
+                nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
+
                 pedido_compra_cliente_data = {
-                    'idcliente': row[0],
-                    'datahorapedidocliente': row[1],
-                    'preco': row[2],
+                        'idcliente': idcliente,
+                        'nomecliente': nomecliente,
+                        'datahorapedidocliente': row[1],
+                        'preco': row[2],
+                        'idpedidocompracliente': pk
                 }
                 form = PedidoCompraclienteForm(initial=pedido_compra_cliente_data)
 
@@ -511,8 +522,12 @@ def pedido_compracliente_update(request, pk):
                     if form.is_valid():
                         data = form.cleaned_data
                         with connection.cursor() as cursor:
-                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, data['idcliente'], data['datahorapedidocliente'], data['preco']])
+                            cliente_id = data['idcliente'].idcliente  # Assumindo que 'id' é o campo de ID do modelo Cliente
+                            datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
+                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, cliente_id, datahora_formatada, data['preco']])
                         return redirect('pedido_compracliente_list')
+                    else:
+                        return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form, 'action': 'Atualizar'})
                 else:
                     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form, 'action': 'Atualizar'})
             else:
@@ -525,7 +540,7 @@ def pedido_compracliente_update(request, pk):
 def pedido_compracliente_delete(request, pk):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, '', '', '', ''])
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
             row = cursor.fetchone()
 
             if row: 

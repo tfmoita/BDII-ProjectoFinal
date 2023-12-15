@@ -5,8 +5,8 @@
 {% block content %}
   <h2>Lista de Pedidos de Compra dos Clientes</h2>
   <ul>
-    {% for pedido in pedidos_compra_cliente %}
-      <li><a href="{% url 'pedido_compracliente_detail' pk=pedido.idpedidocompracliente %}">Pedido #{{ pedido.datahorapedidocliente }}</a></li>
+    {% for pedido_compra_cliente in pedidos_compra_cliente %}
+      <li><a href="{% url 'pedido_compracliente_detail' pk=pedido_compra_cliente.idpedidocompracliente %}">Pedido #{{ pedido_compra_cliente.datahorapedidocliente }}</a></li>
     {% endfor %}
   </ul>
   <a type="button" class="btn btn-dark" href="{% url 'pedido_compracliente_create' %}">Novo Pedido</a>
