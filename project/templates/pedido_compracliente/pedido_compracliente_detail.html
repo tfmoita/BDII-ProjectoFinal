@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 
-{% block title %}nformações básicas do Pedido de Compra do Cliente{% endblock %}
+{% block title %}Informações básicas do Pedido de Compra do Cliente{% endblock %}
 
 {% block content %}
   <div class="card">  
     <div class="card-header">
-        <h3>Pedido #{{ pedido_compra_cliente.datahorapedidocliente }}</h3><div class="ml-auto"><a type="button" class="btn btn-info btn-sm" href="{% url 'detalhes_pedidocompracliente_detail' pk=pedido_compra_cliente.idpedidocompracliente %}">Detalhes</a></div>
+        <h3>Pedido #{{ pedido_compra_cliente.datahorapedidocliente }}</h3>
+        <div class="ml-auto">
+          <a type="button" class="btn btn-info btn-sm" href="{% url 'detalhes_pedidocompracliente_detail' pk=pedido_compra_cliente.iddetalhespedidocompracliente %}">Detalhes</a>
+      </div>      
     </div> 
     <div class="card-body">
         <p><strong>Cliente:</strong> {{ pedido_compra_cliente.nomecliente }}</p>

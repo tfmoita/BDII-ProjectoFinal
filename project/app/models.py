@@ -190,10 +190,18 @@ class PedidoCompracliente(models.Model):
     idcliente = models.ForeignKey(Cliente, models.DO_NOTHING, db_column='idcliente')
     datahorapedidocliente = models.DateTimeField()
     preco = models.IntegerField()
+    iddetalhespedidocompracliente = models.ForeignKey(
+        DetalhesPedidocompracliente,  # Substitua DetalhesPedidoCompraCliente pelo seu modelo de detalhes do pedido
+        models.DO_NOTHING,
+        db_column='iddetalhespedidocompracliente',
+        null=True,  # Defina como True se permitir valores nulos
+        blank=True,  # Defina como True se permitir campos vazios
+    )
 
     class Meta:
         managed = False
         db_table = 'pedido_compracliente'
+
 
 
 class PedidoComprafornecedor(models.Model):

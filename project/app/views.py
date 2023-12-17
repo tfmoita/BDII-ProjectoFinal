@@ -3,8 +3,8 @@ from django.db import connection
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm, DetalhesPedidocompraclienteForm
 from datetime import datetime
 
 def index(request):
@@ -463,7 +463,7 @@ def pedido_compracliente_list(request):
 
 def pedido_compracliente_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
+        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, 0])  
         row = cursor.fetchone()
 
         if row:
@@ -476,6 +476,7 @@ def pedido_compracliente_detail(request, pk):
                 'nomecliente': nomecliente,
                 'datahorapedidocliente': row[1],
                 'preco': row[2],
+                'iddetalhespedidocompracliente': row[3],
                 'idpedidocompracliente': pk
             }
             return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
@@ -557,6 +558,102 @@ def pedido_compracliente_delete(request, pk):
     except Exception as e:
         print(e)
         raise Http404("Erro ao processar a solicitação")
+
+#detalhes pedido de compra de cliente views
+
+def detalhes_pedidocompracliente_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_detalhes_pedidocompracliente()')
+        columns = [col[0] for col in cursor.description]
+        detalhes_pedidocompracliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_list.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
+
+def detalhes_pedidocompracliente_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s, %s, %s, %s)", [pk, 0, 0, 0])  
+        row = cursor.fetchone()
+
+        if row:
+            detalhes_pedido_compra_cliente = {
+                'idpedidocompracliente': row[0],
+                'idequipamento': row[1],
+                'quantidade': row[2],
+                'iddetalhespedidocompracliente': pk
+            }
+
+            print("Detalhes Pedido Compra Cliente:", detalhes_pedido_compra_cliente)
+
+            return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_detail.html', {'detalhes_pedido_compra_cliente': detalhes_pedido_compra_cliente})
+
+        raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
+
+
+
+def detalhes_pedidocompracliente_create(request):
+    form = DetalhesPedidocompraclienteForm()
+
+    if request.method == 'POST':
+        form = DetalhesPedidocompraclienteForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [data['idpedidocompracliente'], data['idequipamento'], data['quantidade']])
+            return redirect('detalhes_pedidocompracliente_list')
+
+    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_form.html', {'form': form})
+
+def detalhes_pedidocompracliente_update(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s)", [pk])
+            row = cursor.fetchone()
+
+            if row:
+                detalhes_pedidocompracliente_data = {
+                    'idpedidocompracliente': row[1],
+                    'idequipamento': row[2],
+                    'quantidade': row[3],
+                }
+                form = DetalhesPedidocompraclienteForm(initial=detalhes_pedidocompracliente_data)
+
+                if request.method == 'POST':
+                    form = DetalhesPedidocompraclienteForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_detalhes_pedidocompracliente_update(%s, %s, %s, %s)", [pk, data['idpedidocompracliente'], data['idequipamento'], data['quantidade']])
+                        return redirect('detalhes_pedidocompracliente_list')
+                else:
+                    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+
+def detalhes_pedidocompracliente_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s)", [pk])
+            row = cursor.fetchone()
+
+            if row:
+                detalhes_pedidocompracliente = get_object_or_404(DetalhesPedidocompracliente, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_detalhes_pedidocompracliente_delete(%s)", [pk])
+                    return redirect('detalhes_pedidocompracliente_list')
+                else:
+                    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_confirm_delete.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
+            else:
+                raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+
 
 #folha de obra
 

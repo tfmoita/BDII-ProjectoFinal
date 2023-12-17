@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem
+from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 
@@ -93,6 +93,7 @@ class PedidoCompraclienteForm(forms.ModelForm):
             'idcliente': 'Cliente',
             'datahorapedidocliente': 'Data e Hora do Pedido',
             'preco': 'Preço',
+            'iddetalhespedidocompracliente': 'Detalhes do Pedido de Compra',
         }
 
     def __init__(self, *args, **kwargs):
@@ -102,6 +103,9 @@ class PedidoCompraclienteForm(forms.ModelForm):
         self.helper.add_input(Submit('submit', 'Guardar'))
         self.fields['idcliente'].queryset = Cliente.objects.all()  # Substitua Cliente pelo nome do seu modelo de cliente
         self.fields['idcliente'].label_from_instance = lambda obj: f"{obj.nomecliente}"
+        self.fields['iddetalhespedidocompracliente'].queryset = DetalhesPedidocompracliente.objects.all()  # Adicione esta linha para definir as opções para este campo
+        self.fields['iddetalhespedidocompracliente'].label_from_instance = lambda obj: f"{obj.seu_campo_descricao}"  # Ajuste conforme o campo que você deseja exibir
+
 
 class FolhaDeObraForm(forms.ModelForm):
     class Meta:
@@ -123,4 +127,18 @@ class FolhaDeObraForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
         
+class DetalhesPedidocompraclienteForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesPedidocompracliente
+        fields = ['idpedidocompracliente', 'idequipamento', 'quantidade']
+        labels = {
+            'idpedidocompracliente': 'ID do Pedido de Compra do Cliente',
+            'idequipamento': 'ID do Equipamento',
+            'quantidade': 'Quantidade',
+        }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
