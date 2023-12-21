@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import connection
+from django.db import transaction
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -489,14 +490,21 @@ def pedido_compracliente_create(request):
     if request.method == 'POST':
         form = PedidoCompraclienteForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            with connection.cursor() as cursor:
-                cliente_id = data['idcliente'].idcliente  # Assumindo que 'id' é o campo de ID do modelo Cliente
+            with transaction.atomic():
+                data = form.cleaned_data
+                cliente_id = data['idcliente'].idcliente
                 datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
-                cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [cliente_id, datahora_formatada, data['preco']])
-            return redirect('pedido_compracliente_list')
+                
+                # Chamada ao procedimento para criar o pedido sem os detalhes
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [
+                        cliente_id, datahora_formatada, data['preco']
+                    ])
+                
+                return redirect('pedido_compracliente_list')
 
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
+
 
 def pedido_compracliente_update(request, pk):
     try:
@@ -567,7 +575,7 @@ def detalhes_pedidocompracliente_list(request):
         columns = [col[0] for col in cursor.description]
         detalhes_pedidocompracliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_list.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
+    return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_list.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
 
 def detalhes_pedidocompracliente_detail(request, pk):
     with connection.cursor() as cursor:
@@ -597,11 +605,15 @@ def detalhes_pedidocompracliente_create(request):
         form = DetalhesPedidocompraclienteForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            equipamento_id = data['idequipamento'].idequipamento  # Obtendo o ID do equipamento
+
             with connection.cursor() as cursor:
-                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [data['idpedidocompracliente'], data['idequipamento'], data['quantidade']])
+                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
+                               request.GET.get('id_pedidocompra'), equipamento_id, data['quantidade']])
             return redirect('detalhes_pedidocompracliente_list')
 
-    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_form.html', {'form': form})
+    return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_form.html', {'form': form})
+
 
 def detalhes_pedidocompracliente_update(request, pk):
     try:
@@ -637,11 +649,11 @@ def detalhes_pedidocompracliente_delete(request, pk):
     try:
         with connection.cursor() as cursor:
             cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s)", [pk])
-            row = cursor.fetchone()
+            row = cursor.fetchone()  
 
             if row:
                 detalhes_pedidocompracliente = get_object_or_404(DetalhesPedidocompracliente, pk=pk)
-                if request.method == 'POST':
+                if request.method == 'POST': 
                     with connection.cursor() as delete_cursor:
                         delete_cursor.execute("CALL sp_detalhes_pedidocompracliente_delete(%s)", [pk])
                     return redirect('detalhes_pedidocompracliente_list')

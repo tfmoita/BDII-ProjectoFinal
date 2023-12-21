@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Pedido de Compra do Cliente{% endblock %}
+
+{% block content %}
+  <h2>Detalhes do Pedido de Compra do Cliente</h2>
+  <ul>
+    {% for detalhe in detalhes_pedidocompracliente %}
+      <li>Detalhe: {{ detalhe.iddetalhespedidocompracliente }} - Equipamento: {{ detalhe.idequipamento }} - Quantidade: {{ detalhe.quantidade }}</li>
+    {% empty %}
+      <li>Nenhum detalhe encontrado.</li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'detalhes_pedidocompracliente_create' %}?id_pedidocompra={{ pedido_compra_cliente.idpedidocompracliente }}">Novo Detalhe</a>
+</div>
+{% endblock %}

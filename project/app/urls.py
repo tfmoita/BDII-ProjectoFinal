@@ -46,6 +46,7 @@ urlpatterns = [
     path('folhas_de_obra/<int:pk>/update/', views.folha_de_obra_update, name='folha_de_obra_update'),
     path('folhas_de_obra/<int:pk>/delete/', views.folha_de_obra_delete, name='folha_de_obra_delete'),
 
+    path('detalhespedidocompracliente/', views.detalhes_pedidocompracliente_list, name='detalhes_pedidocompracliente_list'),
     path('detalhespedidocompracliente/<int:pk>/', views.detalhes_pedidocompracliente_detail, name='detalhes_pedidocompracliente_detail'),
     path('detalhespedidocompracliente/create/', views.detalhes_pedidocompracliente_create, name='detalhes_pedidocompracliente_create'),
     path('detalhespedidocompracliente/<int:pk>/update/', views.detalhes_pedidocompracliente_update, name='detalhes_pedidocompracliente_update'),
