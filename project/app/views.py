@@ -132,8 +132,6 @@ def cliente_detail(request, pk):
             }
             return render(request, 'cliente/cliente_detail.html', {'cliente': cliente})
         
-
-
 def cliente_create(request):
     form = ClienteForm()
 
@@ -155,7 +153,6 @@ def cliente_create(request):
         return render(request, 'cliente/cliente_list.html', {'clientes': clientes})
 
     return render(request, 'cliente/cliente_form.html', {'form': form})
-
 
 def cliente_update(request, pk):
     # Recupere os dados do cliente usando a conexão ou ORM do Django
@@ -199,9 +196,6 @@ def cliente_update(request, pk):
         print(e)  # Apenas para depuração, você pode usar um logger aqui
         raise Http404("Erro ao processar a solicitação")
 
-# Resto do código
-
-
 def cliente_delete(request, pk):
     try:
         with connection.cursor() as cursor:
@@ -227,6 +221,7 @@ def cliente_delete(request, pk):
     except Exception as e:
         print(e)  # Log do erro para depuração
         raise Http404("Erro ao processar a solicitação")
+
 
 # Equipamento views
 
@@ -505,7 +500,6 @@ def pedido_compracliente_create(request):
 
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
 
-
 def pedido_compracliente_update(request, pk):
     try:
         with connection.cursor() as cursor:
@@ -596,8 +590,6 @@ def detalhes_pedidocompracliente_detail(request, pk):
 
         raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
 
-
-
 def detalhes_pedidocompracliente_create(request):
     form = DetalhesPedidocompraclienteForm()
 
@@ -613,7 +605,6 @@ def detalhes_pedidocompracliente_create(request):
             return redirect('detalhes_pedidocompracliente_list')
 
     return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_form.html', {'form': form})
-
 
 def detalhes_pedidocompracliente_update(request, pk):
     try:
@@ -665,6 +656,17 @@ def detalhes_pedidocompracliente_delete(request, pk):
     except Exception as e:
         print(e)
         raise Http404("Erro ao processar a solicitação")
+
+#guia de remessa read de equipamentos
+
+def guia_remessafornecedor_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_guia_remessafornecedor()')
+        columns = [col[0] for col in cursor.description]
+        guia_remessafornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', {'guia_remessa_fornecedor': guia_remessafornecedor})
+  
 
 
 #folha de obra

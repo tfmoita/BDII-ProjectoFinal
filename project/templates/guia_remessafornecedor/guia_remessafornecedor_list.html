@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Pedidos de Compra dos Clientes{% endblock %}
+
+{% block content %}
+  <h2>Lista de Pedidos de Compra dos Clientes</h2>
+  <ul>
+    {% for guia_remessa_fornecedor in pedidos_compra_cliente %}
+      <li><a href="{% url 'guia_remessafornecedor_detail' pk=guia_remessa_fornecedor.idguiaremessafornecedor %}">Pedido #{{ guia_remessa_fornecedor.datahoraguiafornecedor }}</a></li>
+    {% endfor %}
+  </ul>
+  <!--<a type="button" class="btn btn-dark" href="{% url 'guia_remessafornecedor_create' %}">Novo Pedido</a> -->
+{% endblock %}
