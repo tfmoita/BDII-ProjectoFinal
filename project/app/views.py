@@ -664,7 +664,7 @@ def guia_remessafornecedor_list(request):
         cursor.execute('SELECT * FROM fn_listar_guia_remessafornecedor()')
         columns = [col[0] for col in cursor.description]
         guia_remessafornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
+        print(guia_remessafornecedor)
     return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', {'guia_remessa_fornecedor': guia_remessafornecedor})
   
 

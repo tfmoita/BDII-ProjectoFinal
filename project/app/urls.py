@@ -50,5 +50,7 @@ urlpatterns = [
     path('detalhespedidocompracliente/<int:pk>/', views.detalhes_pedidocompracliente_detail, name='detalhes_pedidocompracliente_detail'),
     path('detalhespedidocompracliente/create/', views.detalhes_pedidocompracliente_create, name='detalhes_pedidocompracliente_create'),
     path('detalhespedidocompracliente/<int:pk>/update/', views.detalhes_pedidocompracliente_update, name='detalhes_pedidocompracliente_update'),
-    path('detalhespedidocompracliente/<int:pk>/delete/', views.detalhes_pedidocompracliente_delete, name='detalhes_pedidocompracliente_delete')
+    path('detalhespedidocompracliente/<int:pk>/delete/', views.detalhes_pedidocompracliente_delete, name='detalhes_pedidocompracliente_delete'),
+
+    path('guia_remessa_lista',views.guia_remessafornecedor_list,name='guia_remessafornecedor_list')
 ]

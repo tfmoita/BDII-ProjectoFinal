@@ -5,9 +5,12 @@
 {% block content %}
   <h2>Lista de Pedidos de Compra dos Clientes</h2>
   <ul>
-    {% for guia_remessa_fornecedor in pedidos_compra_cliente %}
-      <li><a href="{% url 'guia_remessafornecedor_detail' pk=guia_remessa_fornecedor.idguiaremessafornecedor %}">Pedido #{{ guia_remessa_fornecedor.datahoraguiafornecedor }}</a></li>
+    {% for data in guia_remessa_fornecedor %}
+      <li>Remessa -{{ data.idguiaremessafornecedor }}&nbsp;&nbsp;&nbsp; Pedido-{{ data.idpedidocomprafornecedor }}&nbsp;&nbsp;&nbsp;Hora-{{ data.datahoraguiafornecedor }}</a></li>
     {% endfor %}
   </ul>
-  <!--<a type="button" class="btn btn-dark" href="{% url 'guia_remessafornecedor_create' %}">Novo Pedido</a> -->
+  {% comment %}
+  <a href="{% url 'guia_remessafornecedor_detail' pk=data.idguiaremessafornecedor %}"></a>
+  <a type="button" class="btn btn-dark" href="{% url 'guia_remessafornecedor_create' %}">Novo Pedido</a>
+  {% endcomment %}
 {% endblock %}
