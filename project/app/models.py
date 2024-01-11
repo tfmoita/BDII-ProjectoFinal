@@ -74,7 +74,7 @@ class DetalhesGuiaremessafornecedor(models.Model):
 class DetalhesPedidocompracliente(models.Model):
     iddetalhespedidocompracliente = models.AutoField(primary_key=True)
     idpedidocompracliente = models.ForeignKey('PedidoCompracliente', models.DO_NOTHING, db_column='idpedidocompracliente')
-    idequipamento = models.ForeignKey('Equipamento', models.DO_NOTHING, db_column='idequipamento')
+    idequipamento = models.IntegerField()
     quantidade = models.IntegerField()
 
     class Meta:

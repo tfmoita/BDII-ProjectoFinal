@@ -1,20 +1,32 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 
-{% block title %}Informações básicas do Pedido de Compra do Cliente{% endblock %}
+{% block title %}Detalhes do Pedido de Compra do Cliente{% endblock %}
 
 {% block content %}
   <div class="card">  
     <div class="card-header">
-        <h3>Pedido #{{ pedido_compra_cliente.datahorapedidocliente }}</h3>
-        <div class="ml-auto">
-          <a type="button" class="btn btn-info btn-sm" href="{% url 'detalhes_pedidocompracliente_list' %}">Detalhes</a>
-      </div>      
+        <h3>Detalhes do Pedido</h3>
     </div> 
     <div class="card-body">
+        <p><strong>ID do Pedido:</strong> {{ pedido_compra_cliente.idpedidocompracliente }}</p>
         <p><strong>Cliente:</strong> {{ pedido_compra_cliente.nomecliente }}</p>
         <p><strong>Data e Hora do Pedido:</strong> {{ pedido_compra_cliente.datahorapedidocliente }}</p>
         <p><strong>Preço:</strong> {{ pedido_compra_cliente.preco }}</p>
+
+        <!-- Detalhes do Pedido -->
+        <h4>Detalhes do Pedido</h4>
+        <ul>
+          {% for detalhe in detalhes_pedido_compra_cliente %}
+            <li>
+              <p><strong>ID do Equipamento:</strong> {{ detalhe.idequipamento }}</p>
+              <p><strong>Quantidade:</strong> {{ detalhe.quantidade }}</p>
+              <!-- Adicione outros campos conforme necessário -->
+            </li>
+          {% endfor %}
+        </ul>
     </div>
+
     <div class="card-footer d-flex">  
         <a href="{% url 'pedido_compracliente_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
         <div class="ml-auto">

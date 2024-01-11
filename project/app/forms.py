@@ -85,23 +85,39 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
 
-class PedidoCompraclienteForm(forms.ModelForm):
+class PedidoDetalhesForm(forms.ModelForm):
+    # Campos do modelo PedidoCompracliente
+    idcliente = forms.ModelChoiceField(queryset=Cliente.objects.all())
+    datahorapedidocliente = forms.DateTimeField()
+    preco = forms.IntegerField()
+ 
+    # Campos adicionais para os detalhes
+    idequipamento = forms.IntegerField()
+    quantidade = forms.IntegerField()
+
     class Meta:
         model = PedidoCompracliente
-        fields = '__all__'
-        labels = {
-            'idcliente': 'Cliente',
-            'datahorapedidocliente': 'Data e Hora do Pedido',
-            'preco': 'Preço',
-        }
+        fields = ['idcliente', 'datahorapedidocliente', 'preco']  # Campos do modelo PedidoCompracliente
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
-        self.fields['idcliente'].queryset = Cliente.objects.all()  # Substitua Cliente pelo nome do seu modelo de cliente
-        self.fields['idcliente'].label_from_instance = lambda obj: f"{obj.nomecliente}"
+
+        # Adicione aqui outros ajustes necessários
+
+    def save(self, commit=True):
+        pedido = super().save(commit=commit)
+
+        # Adicione os detalhes associados ao pedido
+        DetalhesPedidocompracliente.objects.create(
+            idpedidocompracliente=pedido,
+            idequipamento=self.cleaned_data['idequipamento'],
+            quantidade=self.cleaned_data['quantidade']
+        )
+
+        return pedido
 
 
 class FolhaDeObraForm(forms.ModelForm):
@@ -124,17 +140,3 @@ class FolhaDeObraForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
         
-class DetalhesPedidocompraclienteForm(forms.ModelForm):
-    class Meta:
-        model = DetalhesPedidocompracliente
-        fields = ['idequipamento', 'quantidade']
-        labels = {
-            'idequipamento': 'ID do Equipamento',
-            'quantidade': 'Quantidade',
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Guardar'))

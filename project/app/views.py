@@ -5,12 +5,12 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraclienteForm, FolhaDeObraForm, DetalhesPedidocompraclienteForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm
 from datetime import datetime
 
 def index(request):
     return render(request, 'index.html')
-
+ 
 
 # Fornecedor views:
 
@@ -459,7 +459,7 @@ def pedido_compracliente_list(request):
 
 def pedido_compracliente_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, 0])  
+        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
         row = cursor.fetchone()
 
         if row:
@@ -472,7 +472,6 @@ def pedido_compracliente_detail(request, pk):
                 'nomecliente': nomecliente,
                 'datahorapedidocliente': row[1],
                 'preco': row[2],
-                'iddetalhespedidocompracliente': row[3],
                 'idpedidocompracliente': pk
             }
             return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
@@ -480,30 +479,43 @@ def pedido_compracliente_detail(request, pk):
         raise Http404("Pedido de Compra do Cliente does not exist")
 
 def pedido_compracliente_create(request):
-    form = PedidoCompraclienteForm()
+    form = PedidoDetalhesForm()
 
     if request.method == 'POST':
-        form = PedidoCompraclienteForm(request.POST)
+        form = PedidoDetalhesForm(request.POST)
+
         if form.is_valid():
             with transaction.atomic():
+                # Criar o pedido de compra
                 data = form.cleaned_data
                 cliente_id = data['idcliente'].idcliente
                 datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
-                
-                # Chamada ao procedimento para criar o pedido sem os detalhes
+
                 with connection.cursor() as cursor:
                     cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [
                         cliente_id, datahora_formatada, data['preco']
                     ])
-                
+
+                # Obter o ID do pedido recém-criado
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT currval('pedido_compra_cliente_idpedidocompracliente_seq')")
+                    id_pedido = cursor.fetchone()[0]
+
+                # Criar detalhes para o pedido
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
+                        id_pedido, data['idequipamento'], data['quantidade']
+                    ])
+
                 return redirect('pedido_compracliente_list')
 
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
 
+ 
 def pedido_compracliente_update(request, pk):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, None])
             row = cursor.fetchone()
 
             if row:
