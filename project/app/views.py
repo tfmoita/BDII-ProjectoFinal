@@ -467,17 +467,23 @@ def pedido_compracliente_detail(request, pk):
             cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
             nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
 
+            # Recuperar detalhes do pedido de compra do cliente
+            cursor.execute("SELECT idequipamento, quantidade FROM detalhes_pedidocompracliente WHERE idpedidocompracliente = %s", [pk])
+            detalhes_pedido_compra_cliente = cursor.fetchall()
+
             pedido_compra_cliente = {
                 'idcliente': idcliente,
                 'nomecliente': nomecliente,
                 'datahorapedidocliente': row[1],
                 'preco': row[2],
-                'idpedidocompracliente': pk
+                'idpedidocompracliente': pk,
+                'detalhes_pedidocompra_cliente': detalhes_pedido_compra_cliente
             }
+
             return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
 
         raise Http404("Pedido de Compra do Cliente does not exist")
-
+    
 def pedido_compracliente_create(request):
     form = PedidoDetalhesForm()
 
@@ -489,11 +495,10 @@ def pedido_compracliente_create(request):
                 # Criar o pedido de compra
                 data = form.cleaned_data
                 cliente_id = data['idcliente'].idcliente
-                datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
 
                 with connection.cursor() as cursor:
                     cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [
-                        cliente_id, datahora_formatada, data['preco']
+                        cliente_id, None, data['preco']  # Nenhum valor explícito para datahorapedidocliente
                     ])
 
                 # Obter o ID do pedido recém-criado
@@ -501,15 +506,20 @@ def pedido_compracliente_create(request):
                     cursor.execute("SELECT currval('pedido_compra_cliente_idpedidocompracliente_seq')")
                     id_pedido = cursor.fetchone()[0]
 
-                # Criar detalhes para o pedido
-                with connection.cursor() as cursor:
-                    cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
-                        id_pedido, data['idequipamento'], data['quantidade']
-                    ])
+                # Criar detalhes para o pedido (suportando múltiplos detalhes)
+                idequipamentos = request.POST.getlist('idequipamento')
+                quantidades = request.POST.getlist('quantidade')
 
-                return redirect('pedido_compracliente_list')
+                for idequipamento, quantidade in zip(idequipamentos, quantidades):
+                    with connection.cursor() as cursor:
+                        cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
+                            id_pedido, idequipamento, quantidade
+                        ])
+
+            return redirect('pedido_compracliente_list')
 
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
+
 
  
 def pedido_compracliente_update(request, pk):

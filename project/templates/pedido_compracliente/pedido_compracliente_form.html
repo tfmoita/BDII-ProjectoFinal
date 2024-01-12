@@ -1,3 +1,5 @@
+<!-- pedido_compracliente_form.html -->
+
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
@@ -5,6 +7,25 @@
   <h2>{{ action }} Pedido de Compra do Cliente</h2>
   <form method="post">
     {% csrf_token %}
-    {% crispy form %}
+    {{ form|crispy }}
+ 
+    <!-- Campos para múltiplos detalhes -->
+    <div id="detalhes"> 
+        <div class="detalhe">
+            {{ form.idequipamento|as_crispy_field }} {{ form.quantidade|as_crispy_field }}
+        </div>
+    </div> 
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
+
+    <input type="submit" value="Guardar">
   </form>
+
+  <script>
+    function adicionarDetalhe() {
+      var detalhesDiv = document.getElementById('detalhes');
+      var novoDetalhe = document.createElement('div');
+      novoDetalhe.innerHTML = document.querySelector('.detalhe').innerHTML;
+      detalhesDiv.appendChild(novoDetalhe);
+    }
+  </script>
 {% endblock %}

@@ -191,7 +191,8 @@ class PedidoCompracliente(models.Model):
     datahorapedidocliente = models.DateTimeField()
     preco = models.IntegerField()
 
-    class Meta:
+
+    class Meta: 
         managed = False
         db_table = 'pedido_compracliente'
 

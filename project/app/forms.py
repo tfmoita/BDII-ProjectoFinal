@@ -85,39 +85,14 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
 
-class PedidoDetalhesForm(forms.ModelForm):
+class PedidoDetalhesForm(forms.Form):
     # Campos do modelo PedidoCompracliente
     idcliente = forms.ModelChoiceField(queryset=Cliente.objects.all())
-    datahorapedidocliente = forms.DateTimeField()
     preco = forms.IntegerField()
  
     # Campos adicionais para os detalhes
     idequipamento = forms.IntegerField()
     quantidade = forms.IntegerField()
-
-    class Meta:
-        model = PedidoCompracliente
-        fields = ['idcliente', 'datahorapedidocliente', 'preco']  # Campos do modelo PedidoCompracliente
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Guardar'))
-
-        # Adicione aqui outros ajustes necessários
-
-    def save(self, commit=True):
-        pedido = super().save(commit=commit)
-
-        # Adicione os detalhes associados ao pedido
-        DetalhesPedidocompracliente.objects.create(
-            idpedidocompracliente=pedido,
-            idequipamento=self.cleaned_data['idequipamento'],
-            quantidade=self.cleaned_data['quantidade']
-        )
-
-        return pedido
 
 
 class FolhaDeObraForm(forms.ModelForm):

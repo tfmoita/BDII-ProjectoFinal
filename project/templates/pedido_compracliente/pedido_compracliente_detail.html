@@ -6,7 +6,7 @@
 {% block content %}
   <div class="card">  
     <div class="card-header">
-        <h3>Detalhes do Pedido</h3>
+        <h3>Informações do Pedido</h3>
     </div> 
     <div class="card-body">
         <p><strong>ID do Pedido:</strong> {{ pedido_compra_cliente.idpedidocompracliente }}</p>
@@ -17,10 +17,10 @@
         <!-- Detalhes do Pedido -->
         <h4>Detalhes do Pedido</h4>
         <ul>
-          {% for detalhe in detalhes_pedido_compra_cliente %}
+          {% for detalhe in pedido_compra_cliente.detalhes_pedidocompra_cliente %}
             <li>
-              <p><strong>ID do Equipamento:</strong> {{ detalhe.idequipamento }}</p>
-              <p><strong>Quantidade:</strong> {{ detalhe.quantidade }}</p>
+              <p><strong>ID do Equipamento:</strong> {{ detalhe.0 }}</p>
+              <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
               <!-- Adicione outros campos conforme necessário -->
             </li>
           {% endfor %}
