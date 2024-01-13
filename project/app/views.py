@@ -5,7 +5,7 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm
 from datetime import datetime
 
 def index(request):
@@ -485,20 +485,25 @@ def pedido_compracliente_detail(request, pk):
         raise Http404("Pedido de Compra do Cliente does not exist")
     
 def pedido_compracliente_create(request):
-    form = PedidoDetalhesForm()
+    form_pedido = PedidoCompraClienteForm()
+    form_detalhes = PedidoDetalhesForm()
 
     if request.method == 'POST':
-        form = PedidoDetalhesForm(request.POST)
+        form_pedido = PedidoCompraClienteForm(request.POST)
+        form_detalhes = PedidoDetalhesForm(request.POST)
 
-        if form.is_valid():
+        if form_pedido.is_valid() and form_detalhes.is_valid():
             with transaction.atomic():
                 # Criar o pedido de compra
-                data = form.cleaned_data
-                cliente_id = data['idcliente'].idcliente
+                data_pedido = form_pedido.cleaned_data
+                cliente_id = data_pedido['idcliente'].idcliente
 
                 with connection.cursor() as cursor:
+                    cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [cliente_id])
+                    nome_cliente = cursor.fetchone()[0]
+
                     cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [
-                        cliente_id, None, data['preco']  # Nenhum valor explícito para datahorapedidocliente
+                        cliente_id, None, data_pedido['preco']
                     ])
 
                 # Obter o ID do pedido recém-criado
@@ -517,8 +522,8 @@ def pedido_compracliente_create(request):
                         ])
 
             return redirect('pedido_compracliente_list')
-
-    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
+    
+    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
 
 
  

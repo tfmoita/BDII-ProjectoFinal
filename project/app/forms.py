@@ -85,14 +85,15 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
 
-class PedidoDetalhesForm(forms.Form):
-    # Campos do modelo PedidoCompracliente
-    idcliente = forms.ModelChoiceField(queryset=Cliente.objects.all())
-    preco = forms.IntegerField()
- 
-    # Campos adicionais para os detalhes
-    idequipamento = forms.IntegerField()
-    quantidade = forms.IntegerField()
+class PedidoCompraClienteForm(forms.ModelForm):
+    class Meta:
+        model = PedidoCompracliente
+        fields = ['idcliente', 'preco']
+
+class PedidoDetalhesForm(forms.ModelForm):
+    class Meta:
+        model = DetalhesPedidocompracliente
+        fields = ['idequipamento', 'quantidade']
 
 
 class FolhaDeObraForm(forms.ModelForm):

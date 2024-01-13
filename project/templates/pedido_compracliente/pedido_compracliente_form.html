@@ -5,27 +5,43 @@
 
 {% block content %}
   <h2>{{ action }} Pedido de Compra do Cliente</h2>
-  <form method="post">
+  <form method="post" id="pedidoForm">
     {% csrf_token %}
-    {{ form|crispy }}
- 
-    <!-- Campos para múltiplos detalhes -->
-    <div id="detalhes"> 
+    {{ form_pedido|crispy }}
+
+    <!-- Campos iniciais para um detalhe -->
+    <div id="detalhes">
         <div class="detalhe">
-            {{ form.idequipamento|as_crispy_field }} {{ form.quantidade|as_crispy_field }}
+            {{ form_detalhes.idequipamento|as_crispy_field }} {{ form_detalhes.quantidade|as_crispy_field }}
         </div>
-    </div> 
+    </div>
     <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
 
     <input type="submit" value="Guardar">
   </form>
 
   <script>
+    var contadorDetalhes = 1;
+
     function adicionarDetalhe() {
       var detalhesDiv = document.getElementById('detalhes');
-      var novoDetalhe = document.createElement('div');
-      novoDetalhe.innerHTML = document.querySelector('.detalhe').innerHTML;
+      var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);  // Clona o primeiro bloco de detalhes
+
+      // Atualiza os atributos 'name' e 'id' dos campos clonados para evitar conflitos
+      updateAttributes(novoDetalhe);
+
       detalhesDiv.appendChild(novoDetalhe);
+      contadorDetalhes++;
+    }
+
+    function updateAttributes(element) {
+      var inputs = element.querySelectorAll('input');
+      inputs.forEach(function(input) {
+        var newName = input.getAttribute('name').replace('0', contadorDetalhes);
+        var newId = input.getAttribute('id').replace('0', contadorDetalhes);
+        input.setAttribute('name', newName);
+        input.setAttribute('id', newId);
+      });
     }
   </script>
 {% endblock %}
