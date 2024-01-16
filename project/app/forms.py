@@ -3,6 +3,7 @@ from django import forms
 from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
+from django.db import connection
 
 class FornecedorForm(forms.ModelForm):
     class Meta:
@@ -85,10 +86,18 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
 
-class PedidoCompraClienteForm(forms.ModelForm):
-    class Meta:
-        model = PedidoCompracliente
-        fields = ['idcliente', 'preco']
+class PedidoCompraClienteForm(forms.Form):
+    # Lógica para obter a lista de clientes usando SQL puro
+    clientes_query = "SELECT idcliente, nomecliente FROM cliente"
+    with connection.cursor() as cursor:
+        cursor.execute(clientes_query)
+        clientes = cursor.fetchall()
+
+    # Criar lista de tuplas (idcliente, nomecliente) para usar como choices
+    clientes_choices = [(cliente[0], cliente[1]) for cliente in clientes]
+
+    idcliente = forms.ChoiceField(choices=clientes_choices)
+    preco = forms.IntegerField()
 
 class PedidoDetalhesForm(forms.ModelForm):
     class Meta:

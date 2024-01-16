@@ -483,7 +483,7 @@ def pedido_compracliente_detail(request, pk):
             return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
 
         raise Http404("Pedido de Compra do Cliente does not exist")
-    
+
 def pedido_compracliente_create(request):
     form_pedido = PedidoCompraClienteForm()
     form_detalhes = PedidoDetalhesForm()
@@ -496,7 +496,7 @@ def pedido_compracliente_create(request):
             with transaction.atomic():
                 # Criar o pedido de compra
                 data_pedido = form_pedido.cleaned_data
-                cliente_id = data_pedido['idcliente'].idcliente
+                cliente_id = data_pedido['idcliente']
 
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [cliente_id])
@@ -521,8 +521,15 @@ def pedido_compracliente_create(request):
                             id_pedido, idequipamento, quantidade
                         ])
 
-            return redirect('pedido_compracliente_list')
-    
+            # Adicione nome_cliente ao contexto do template
+            context = {
+                'form_pedido': form_pedido,
+                'form_detalhes': form_detalhes,
+                'nome_cliente': nome_cliente,
+            }
+
+            return render(request, 'pedido_compracliente/pedido_compracliente_list.html', context)
+
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
 
 

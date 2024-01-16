@@ -5,9 +5,11 @@
 
 {% block content %}
   <h2>{{ action }} Pedido de Compra do Cliente</h2>
+  
   <form method="post" id="pedidoForm">
     {% csrf_token %}
-    {{ form_pedido|crispy }}
+    {{ form_pedido.idcliente|as_crispy_field }}
+    {{ form_pedido.preco|as_crispy_field }}
 
     <!-- Campos iniciais para um detalhe -->
     <div id="detalhes">
