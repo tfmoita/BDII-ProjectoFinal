@@ -468,7 +468,7 @@ def pedido_compracliente_detail(request, pk):
             nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
 
             # Recuperar detalhes do pedido de compra do cliente
-            cursor.execute("SELECT idequipamento, quantidade FROM detalhes_pedidocompracliente WHERE idpedidocompracliente = %s", [pk])
+            cursor.execute("SELECT d.idequipamento, d.quantidade, e.nomeequipamento FROM detalhes_pedidocompracliente d INNER JOIN equipamento e ON d.idequipamento = e.idequipamento WHERE d.idpedidocompracliente = %s", [pk])
             detalhes_pedido_compra_cliente = cursor.fetchall()
 
             pedido_compra_cliente = {

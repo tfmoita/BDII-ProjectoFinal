@@ -96,13 +96,31 @@ class PedidoCompraClienteForm(forms.Form):
     # Criar lista de tuplas (idcliente, nomecliente) para usar como choices
     clientes_choices = [(cliente[0], cliente[1]) for cliente in clientes]
 
-    idcliente = forms.ChoiceField(choices=clientes_choices)
+    idcliente = forms.ChoiceField(choices=clientes_choices, label='Nome do Cliente')
     preco = forms.IntegerField()
+
+from django import forms
 
 class PedidoDetalhesForm(forms.ModelForm):
     class Meta:
         model = DetalhesPedidocompracliente
         fields = ['idequipamento', 'quantidade']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de equipamentos usando SQL puro
+        equipamentos_query = "SELECT idequipamento, nomeequipamento FROM equipamento"
+        with connection.cursor() as cursor:
+            cursor.execute(equipamentos_query)
+            equipamentos = cursor.fetchall()
+
+        # Criar lista de tuplas (idequipamento, nomeequipamento) para usar como choices
+        equipamentos_choices = [(equipamento[0], equipamento[1]) for equipamento in equipamentos]
+
+        # Atualizar o campo idequipamento com as escolhas e o widget Select
+        self.fields['idequipamento'].choices = equipamentos_choices
+        self.fields['idequipamento'].widget = forms.Select(choices=equipamentos_choices)
 
 
 class FolhaDeObraForm(forms.ModelForm):
