@@ -8,6 +8,7 @@ from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafo
 from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm
 from datetime import datetime
 
+
 def index(request):
     return render(request, 'index.html')
  
@@ -534,10 +535,20 @@ def pedido_compracliente_create(request):
 
 
  
+# pedido_compracliente_update view
+
+# pedido_compracliente_update view
+
+from django.shortcuts import render, redirect
+from django.http import Http404
+from django.forms import formset_factory
+from .forms import PedidoCompraClienteForm, PedidoDetalhesForm
+from django.db import connection
+
 def pedido_compracliente_update(request, pk):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, None])
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
             row = cursor.fetchone()
 
             if row:
@@ -545,28 +556,54 @@ def pedido_compracliente_update(request, pk):
                 cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
                 nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
 
+                # Recuperar detalhes do pedido de compra do cliente
+                cursor.execute("SELECT idequipamento, quantidade FROM detalhes_pedidocompracliente WHERE idpedidocompracliente = %s", [pk])
+                detalhes_pedido_compra_cliente = cursor.fetchall()
+
+                # Convertendo a lista de tuplas em uma lista de dicionários
+                detalhes_pedido_compra_cliente = [{'idequipamento': detalhe[0], 'quantidade': detalhe[1]} for detalhe in detalhes_pedido_compra_cliente]
+
+                # Calcula o comprimento da lista de detalhes
+                detalhes_length = len(detalhes_pedido_compra_cliente)
+
                 pedido_compra_cliente_data = {
-                        'idcliente': idcliente,
-                        'nomecliente': nomecliente,
-                        'datahorapedidocliente': row[1],
-                        'preco': row[2],
-                        'idpedidocompracliente': pk
+                    'idcliente': idcliente,
+                    'nomecliente': nomecliente,
+                    'datahorapedidocliente': row[1],
+                    'preco': row[2],
+                    'idpedidocompracliente': pk
                 }
-                form = PedidoCompraclienteForm(initial=pedido_compra_cliente_data)
+                form_pedido = PedidoCompraClienteForm(initial=pedido_compra_cliente_data)
+
+                # Criar um formulário de detalhes para cada detalhe existente
+                detalhes_formset = formset_factory(PedidoDetalhesForm, extra=detalhes_length)
+                detalhes_forms = detalhes_formset(initial=detalhes_pedido_compra_cliente)
 
                 if request.method == 'POST':
-                    form = PedidoCompraclienteForm(request.POST)
-                    if form.is_valid():
-                        data = form.cleaned_data
+                    form_pedido = PedidoCompraClienteForm(request.POST)
+                    detalhes_forms = detalhes_formset(request.POST)
+
+                    if form_pedido.is_valid() and detalhes_forms.is_valid():
+                        # Lógica de atualização do pedido de compra do cliente
+                        data_pedido = form_pedido.cleaned_data
+                        cliente_id = data_pedido['idcliente']
+
+                        # Atualizar os dados do pedido
                         with connection.cursor() as cursor:
-                            cliente_id = data['idcliente'].idcliente  # Assumindo que 'id' é o campo de ID do modelo Cliente
-                            datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
-                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, cliente_id, datahora_formatada, data['preco']])
+                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, cliente_id, None, data_pedido['preco']])
+
+                        # Atualizar os detalhes do pedido
+                        for detalhe_form in detalhes_forms:
+                            detalhe_data = detalhe_form.cleaned_data
+                            with connection.cursor() as cursor:
+                                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [pk, detalhe_data['idequipamento'], detalhe_data['quantidade']])
+
                         return redirect('pedido_compracliente_list')
                     else:
-                        return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form, 'action': 'Atualizar'})
+                        return render(request, 'pedido_compracliente/pedido_compracliente_update_form.html', {'form_pedido': form_pedido, 'detalhes_forms': detalhes_forms, 'action': 'Atualizar'})
                 else:
-                    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form, 'action': 'Atualizar'})
+                    # Adiciona detalhes_length ao contexto
+                    return render(request, 'pedido_compracliente/pedido_compracliente_update_form.html', {'form_pedido': form_pedido, 'detalhes_forms': detalhes_forms, 'action': 'Atualizar', 'detalhes_length': detalhes_length})
             else:
                 raise Http404("Pedido de Compra do Cliente does not exist")
 

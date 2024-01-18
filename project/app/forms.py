@@ -99,8 +99,6 @@ class PedidoCompraClienteForm(forms.Form):
     idcliente = forms.ChoiceField(choices=clientes_choices, label='Nome do Cliente')
     preco = forms.IntegerField()
 
-from django import forms
-
 class PedidoDetalhesForm(forms.ModelForm):
     class Meta:
         model = DetalhesPedidocompracliente
@@ -116,7 +114,7 @@ class PedidoDetalhesForm(forms.ModelForm):
             equipamentos = cursor.fetchall()
 
         # Criar lista de tuplas (idequipamento, nomeequipamento) para usar como choices
-        equipamentos_choices = [(equipamento[0], equipamento[1]) for equipamento in equipamentos]
+        equipamentos_choices = [(str(equipamento[0]), equipamento[1]) for equipamento in equipamentos]
 
         # Atualizar o campo idequipamento com as escolhas e o widget Select
         self.fields['idequipamento'].choices = equipamentos_choices
