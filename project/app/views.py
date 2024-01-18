@@ -5,15 +5,14 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoCompraClienteForm, FolhaDeObraForm, PedidoDetalhesForm
 from datetime import datetime
 
 def index(request):
     return render(request, 'index.html')
- 
+
 
 # Fornecedor views:
-
 def fornecedor_list(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM fn_listar_fornecedor()')
@@ -459,7 +458,7 @@ def pedido_compracliente_list(request):
 
 def pedido_compracliente_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
+        cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, 0])  
         row = cursor.fetchone()
 
         if row:
@@ -467,77 +466,43 @@ def pedido_compracliente_detail(request, pk):
             cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
             nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
 
-            # Recuperar detalhes do pedido de compra do cliente
-            cursor.execute("SELECT d.idequipamento, d.quantidade, e.nomeequipamento FROM detalhes_pedidocompracliente d INNER JOIN equipamento e ON d.idequipamento = e.idequipamento WHERE d.idpedidocompracliente = %s", [pk])
-            detalhes_pedido_compra_cliente = cursor.fetchall()
-
             pedido_compra_cliente = {
                 'idcliente': idcliente,
                 'nomecliente': nomecliente,
                 'datahorapedidocliente': row[1],
                 'preco': row[2],
-                'idpedidocompracliente': pk,
-                'detalhes_pedidocompra_cliente': detalhes_pedido_compra_cliente
+                'iddetalhespedidocompracliente': row[3],
+                'idpedidocompracliente': pk
             }
-
             return render(request, 'pedido_compracliente/pedido_compracliente_detail.html', {'pedido_compra_cliente': pedido_compra_cliente})
 
         raise Http404("Pedido de Compra do Cliente does not exist")
 
 def pedido_compracliente_create(request):
-    form_pedido = PedidoCompraClienteForm()
-    form_detalhes = PedidoDetalhesForm()
+    form = PedidoCompraClienteForm()
 
     if request.method == 'POST':
-        form_pedido = PedidoCompraClienteForm(request.POST)
-        form_detalhes = PedidoDetalhesForm(request.POST)
-
-        if form_pedido.is_valid() and form_detalhes.is_valid():
+        form = PedidoCompraClienteForm(request.POST)
+        if form.is_valid():
             with transaction.atomic():
-                # Criar o pedido de compra
-                data_pedido = form_pedido.cleaned_data
-                cliente_id = data_pedido['idcliente']
-
+                data = form.cleaned_data
+                cliente_id = data['idcliente'].idcliente
+                datahora_formatada = data['datahorapedidocliente'].strftime("%Y-%m-%d %H:%M:%S")
+                
+                # Chamada ao procedimento para criar o pedido sem os detalhes
                 with connection.cursor() as cursor:
-                    cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [cliente_id])
-                    nome_cliente = cursor.fetchone()[0]
-
                     cursor.execute("CALL sp_pedido_compracliente_create(%s, %s, %s)", [
-                        cliente_id, None, data_pedido['preco']
+                        cliente_id, datahora_formatada, data['preco']
                     ])
+                
+                return redirect('pedido_compracliente_list')
 
-                # Obter o ID do pedido recém-criado
-                with connection.cursor() as cursor:
-                    cursor.execute("SELECT currval('pedido_compra_cliente_idpedidocompracliente_seq')")
-                    id_pedido = cursor.fetchone()[0]
+    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form': form})
 
-                # Criar detalhes para o pedido (suportando múltiplos detalhes)
-                idequipamentos = request.POST.getlist('idequipamento')
-                quantidades = request.POST.getlist('quantidade')
-
-                for idequipamento, quantidade in zip(idequipamentos, quantidades):
-                    with connection.cursor() as cursor:
-                        cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
-                            id_pedido, idequipamento, quantidade
-                        ])
-
-            # Adicione nome_cliente ao contexto do template
-            context = {
-                'form_pedido': form_pedido,
-                'form_detalhes': form_detalhes,
-                'nome_cliente': nome_cliente,
-            }
-
-            return render(request, 'pedido_compracliente/pedido_compracliente_list.html', context)
-
-    return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
-
-
- 
 def pedido_compracliente_update(request, pk):
     try:
         with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s, %s)", [pk, 0, None, 0, None])
+            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
             row = cursor.fetchone()
 
             if row:
@@ -552,10 +517,10 @@ def pedido_compracliente_update(request, pk):
                         'preco': row[2],
                         'idpedidocompracliente': pk
                 }
-                form = PedidoCompraclienteForm(initial=pedido_compra_cliente_data)
+                form = PedidoCompraClienteForm(initial=pedido_compra_cliente_data)
 
                 if request.method == 'POST':
-                    form = PedidoCompraclienteForm(request.POST)
+                    form = PedidoCompraClienteForm(request.POST)
                     if form.is_valid():
                         data = form.cleaned_data
                         with connection.cursor() as cursor:
@@ -625,10 +590,10 @@ def detalhes_pedidocompracliente_detail(request, pk):
         raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
 
 def detalhes_pedidocompracliente_create(request):
-    form = DetalhesPedidocompraclienteForm()
+    form = PedidoDetalhesForm()
 
     if request.method == 'POST':
-        form = DetalhesPedidocompraclienteForm(request.POST)
+        form = PedidoDetalhesForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
             equipamento_id = data['idequipamento'].idequipamento  # Obtendo o ID do equipamento
@@ -652,10 +617,10 @@ def detalhes_pedidocompracliente_update(request, pk):
                     'idequipamento': row[2],
                     'quantidade': row[3],
                 }
-                form = DetalhesPedidocompraclienteForm(initial=detalhes_pedidocompracliente_data)
+                form = PedidoDetalhesForm(initial=detalhes_pedidocompracliente_data)
 
                 if request.method == 'POST':
-                    form = DetalhesPedidocompraclienteForm(request.POST)
+                    form = PedidoDetalhesForm(request.POST)
                     if form.is_valid():
                         data = form.cleaned_data
                         with connection.cursor() as cursor:
@@ -701,6 +666,32 @@ def guia_remessafornecedor_list(request):
         print(guia_remessafornecedor)
     return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', {'guia_remessa_fornecedor': guia_remessafornecedor})
   
+def guia_remessafornecedor_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_guia_remessafornecedor_read(%s, %s, %s)", [pk, 0, None])  
+        row = cursor.fetchone()
+
+        if row:
+            
+            idpedidocomprafornecedor = row[0]
+            cursor.execute("SELECT idfornecedor FROM pedido_comprafornecedor WHERE idpedidocomprafornecedor = %s", [idpedidocomprafornecedor])
+            idfornecedor = cursor.fetchone()[0]  
+
+            idpedidocomprafornecedor = row[0]
+            cursor.execute("SELECT nomefornecedor,email FROM fornecedor WHERE idfornecedor = %s", [idfornecedor])
+            fornecedor_row = cursor.fetchone()
+
+            guia_remessa = {
+                'idguiaremessafornecedor': pk,
+                'datahorapedidocliente': row[1],
+                'idpedidocomprafornecedor':idpedidocomprafornecedor,
+                'idfornecedor': idfornecedor,
+                'nome':fornecedor_row[0],
+                'email':fornecedor_row[1]
+            }
+            return render(request, 'guia_remessafornecedor/guia_remessafornecedor_detail.html', {'guia_remessa': guia_remessa})
+
+        raise Http404("Pedido de Compra do Cliente does not exist")
 
 
 #folha de obra

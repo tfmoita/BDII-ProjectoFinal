@@ -85,7 +85,7 @@ class PedidoCompraFornecedorForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'post'
         self.helper.add_input(Submit('submit', 'Guardar'))
-
+        
 class PedidoCompraClienteForm(forms.Form):
     # Lógica para obter a lista de clientes usando SQL puro
     clientes_query = "SELECT idcliente, nomecliente FROM cliente"
