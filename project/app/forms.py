@@ -96,8 +96,23 @@ class PedidoCompraClienteForm(forms.Form):
     # Criar lista de tuplas (idcliente, nomecliente) para usar como choices
     clientes_choices = [(cliente[0], cliente[1]) for cliente in clientes]
 
+    # Inicializar o campo datahorapedidocliente de forma mais segura
+    datahorapedidocliente = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+
     idcliente = forms.ChoiceField(choices=clientes_choices, label='Nome do Cliente')
     preco = forms.IntegerField()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorapedido = cleaned_data.get('datahorapedidocliente')
+
+        if datahorapedido:
+            cleaned_data['datahorapedidocliente'] = datahorapedido.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorapedidocliente'] = None
+
+        return cleaned_data
+
 
 class PedidoDetalhesForm(forms.ModelForm):
     class Meta:

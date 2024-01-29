@@ -534,103 +534,156 @@ def pedido_compracliente_create(request):
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
 
 
- 
-# pedido_compracliente_update view
-
-# pedido_compracliente_update view
-
 from django.shortcuts import render, redirect
 from django.http import Http404
-from django.forms import formset_factory
+from django.db import connection, transaction
 from .forms import PedidoCompraClienteForm, PedidoDetalhesForm
-from django.db import connection
+from django.forms import formset_factory
+import logging
 
+
+# No seu views.py
 def pedido_compracliente_update(request, pk):
+    logger = logging.getLogger(__name__)
+
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
-            row = cursor.fetchone()
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
+                row = cursor.fetchone()
+                print(f"DEBUG: row: {row}")
 
-            if row:
-                idcliente = row[0]
-                cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
-                nomecliente = cursor.fetchone()[0]  # Recupera o nome do cliente
+                if row is not None and len(row) >= 3:
+                    idcliente = row[0]
+                    cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
+                    nomecliente_result = cursor.fetchone()
+                    nomecliente = nomecliente_result[0] if nomecliente_result else None
 
-                # Recuperar detalhes do pedido de compra do cliente
-                cursor.execute("SELECT idequipamento, quantidade FROM detalhes_pedidocompracliente WHERE idpedidocompracliente = %s", [pk])
-                detalhes_pedido_compra_cliente = cursor.fetchall()
+                    cursor.execute("SELECT idequipamento, quantidade FROM detalhes_pedidocompracliente WHERE idpedidocompracliente = %s", [pk])
+                    detalhes_pedido_compra_cliente = cursor.fetchall()
 
-                # Convertendo a lista de tuplas em uma lista de dicionários
-                detalhes_pedido_compra_cliente = [{'idequipamento': detalhe[0], 'quantidade': detalhe[1]} for detalhe in detalhes_pedido_compra_cliente]
+                    detalhes_pedido_compra_cliente = [{'idequipamento': detalhe[0], 'quantidade': detalhe[1]} for detalhe in detalhes_pedido_compra_cliente] if detalhes_pedido_compra_cliente else []
 
-                # Calcula o comprimento da lista de detalhes
-                detalhes_length = len(detalhes_pedido_compra_cliente)
+                    pedido_compra_cliente_data = {
+                        'idcliente': idcliente,
+                        'nomecliente': nomecliente,
+                        'datahorapedidocliente': row[1] if len(row) > 1 else None,
+                        'preco': row[2] if len(row) > 2 else None,
+                        'idpedidocompracliente': pk
+                    }
 
-                pedido_compra_cliente_data = {
-                    'idcliente': idcliente,
-                    'nomecliente': nomecliente,
-                    'datahorapedidocliente': row[1],
-                    'preco': row[2],
-                    'idpedidocompracliente': pk
-                }
-                form_pedido = PedidoCompraClienteForm(initial=pedido_compra_cliente_data)
+                    if 'datahorapedidocliente' in pedido_compra_cliente_data:
+                        print("DEBUG datahorapedidocliente exists")
+                    else:
+                        print("DEBUG datahorapedidocliente does not exist")
 
-                # Criar um formulário de detalhes para cada detalhe existente
-                detalhes_formset = formset_factory(PedidoDetalhesForm, extra=detalhes_length)
-                detalhes_forms = detalhes_formset(initial=detalhes_pedido_compra_cliente)
+                    # Modificação: Verificar se é uma solicitação GET ou POST e inicializar o formulário adequadamente
+                    if request.method == 'GET':
+                        form_pedido = PedidoCompraClienteForm(initial=pedido_compra_cliente_data)
+                    elif request.method == 'POST':
+                        form_pedido = PedidoCompraClienteForm(request.POST, initial=pedido_compra_cliente_data)
+                    else:
+                        raise Http404("Método HTTP não suportado")
 
-                if request.method == 'POST':
-                    form_pedido = PedidoCompraClienteForm(request.POST)
-                    detalhes_forms = detalhes_formset(request.POST)
+                    print(f"form_pedido.errors (POST): {form_pedido.errors}")
+                    print(f"form_pedido.is_bound (POST): {form_pedido.is_bound}")
+                    print(f"form_pedido.is_valid() (POST): {form_pedido.is_valid()}")
 
-                    if form_pedido.is_valid() and detalhes_forms.is_valid():
-                        # Lógica de atualização do pedido de compra do cliente
+                    # Modificação: Remover o trecho que cria detalhes_forms inicialmente
+                    detalhes_forms = []
+
+                    # ...
+
+                   # ...
+
+                    # ...
+
+                    # Adiciona mensagem de depuração para verificar se chegou a este ponto
+                    print("DEBUG: Chegou aqui")
+
+                    if form_pedido.is_valid():
                         data_pedido = form_pedido.cleaned_data
                         cliente_id = data_pedido['idcliente']
+                        datahorapedido = data_pedido['datahorapedidocliente'] if data_pedido['datahorapedidocliente'] else None
 
-                        # Atualizar os dados do pedido
+                        # Atualiza o pedido de compra do cliente
                         with connection.cursor() as cursor:
-                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s)", [pk, cliente_id, None, data_pedido['preco']])
+                            cursor.execute("CALL sp_pedido_compracliente_update(%s, %s, %s, %s, %s)",
+                                        [pk, cliente_id, datahorapedido, data_pedido['preco']])
 
-                        # Atualizar os detalhes do pedido
-                        for detalhe_form in detalhes_forms:
-                            detalhe_data = detalhe_form.cleaned_data
-                            with connection.cursor() as cursor:
-                                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [pk, detalhe_data['idequipamento'], detalhe_data['quantidade']])
+                        # Adiciona mensagem de depuração após a atualização do pedido principal
+                        print("DEBUG: Pedido de Compra do Cliente atualizado com sucesso")
 
-                        return redirect('pedido_compracliente_list')
+                        # Recria detalhes_forms apenas se necessário
+                        detalhes_forms = []
+                        for i, detalhe in enumerate(detalhes_pedido_compra_cliente):
+                            prefix = f'detalhe_{i}'
+                            try:
+                                form = PedidoDetalhesForm(request.POST, prefix=prefix, initial={'idequipamento': detalhe['idequipamento'], 'quantidade': detalhe['quantidade']})
+                                detalhes_forms.append(form)
+                                print(f"DEBUG: detalhes_forms[{i}] errors: {form.errors}")
+                            except Exception as e:
+                                print(f"DEBUG: Erro ao criar detalhe form {i}: {e}")
+
+                        # Adiciona mensagem de depuração após a criação dos formulários de detalhes
+                        print("DEBUG: Criados formulários de detalhes")
+
+                        if all(form.is_valid() for form in detalhes_forms):
+                            for i, form in enumerate(detalhes_forms):
+                                detalhe_data = form.cleaned_data
+                                idequipamento = detalhe_data['idequipamento']
+                                quantidade = detalhe_data['quantidade']
+
+                                with connection.cursor() as cursor:
+                                    cursor.execute("CALL sp_detalhes_pedidocompracliente_update(%s, %s, %s, %s)",
+                                                [pk, idequipamento, quantidade, i + 1])
+
+                            logger.info(f"Pedido de Compra do Cliente atualizado com sucesso: {pk}")
+                            return redirect('pedido_compracliente_list')
+                        else:
+                            print(f"DEBUG: Erros nos formulários de detalhes: {[form.errors for form in detalhes_forms]}")
                     else:
-                        return render(request, 'pedido_compracliente/pedido_compracliente_update_form.html', {'form_pedido': form_pedido, 'detalhes_forms': detalhes_forms, 'action': 'Atualizar'})
+                        print(f"DEBUG: Erros no formulário principal: {form_pedido.errors}")
+
+                    # Adiciona mensagem de depuração para verificar se chegou a este ponto em caso de erro
+                    print("DEBUG: Chegou aqui após o tratamento de erros")
+
+                    return render(request, 'pedido_compracliente/pedido_compracliente_update_form.html', {'form_pedido': form_pedido, 'detalhes_forms': detalhes_forms, 'action': 'Atualizar', 'detalhes_pedido_compra_cliente': detalhes_pedido_compra_cliente})
+
+
+
                 else:
-                    # Adiciona detalhes_length ao contexto
-                    return render(request, 'pedido_compracliente/pedido_compracliente_update_form.html', {'form_pedido': form_pedido, 'detalhes_forms': detalhes_forms, 'action': 'Atualizar', 'detalhes_length': detalhes_length})
-            else:
-                raise Http404("Pedido de Compra do Cliente does not exist")
+                    raise Http404("Pedido de Compra do Cliente does not exist")
 
     except Exception as e:
-        print(e)
+        print(f"Erro ao processar a solicitação: {e}")
+        logger.error(f"Erro ao processar a solicitação: {e}")
         raise Http404("Erro ao processar a solicitação")
+    
+# views.py
+from django.shortcuts import render, redirect
+from django.http import Http404
+from django.db import connection, transaction
 
 def pedido_compracliente_delete(request, pk):
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("CALL sp_pedido_compracliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])
-            row = cursor.fetchone()
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Chame o procedimento armazenado para deletar os detalhes do pedido de compra do cliente
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_pedidocompracliente_delete(%s)", [pk])
 
-            if row: 
-                pedido_compra_cliente = get_object_or_404(PedidoCompracliente, pk=pk)
-                if request.method == 'POST':
-                    with connection.cursor() as delete_cursor:
-                        delete_cursor.execute("CALL sp_pedido_compracliente_delete(%s)", [pk])
-                    return redirect('pedido_compracliente_list')
-                else:
-                    return render(request, 'pedido_compracliente/pedido_compracliente_confirm_delete.html', {'pedido_compra_cliente': pedido_compra_cliente})
-            else:
-                raise Http404("Pedido de Compra do Cliente does not exist")
+                # Chame o procedimento armazenado para deletar o pedido de compra do cliente
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_pedido_compracliente_delete(%s)", [pk])
 
-    except Exception as e:
-        print(e)
-        raise Http404("Erro ao processar a solicitação")
+                return redirect('pedido_compracliente_list')
+
+        except Exception as e:
+            print(f"Erro ao processar a solicitação: {e}")
+            raise Http404("Erro ao processar a solicitação")
+
+    return render(request, 'pedido_compracliente/pedido_compracliente_confirm_delete.html', {'idpedidocompracliente': pk})
 
 #detalhes pedido de compra de cliente views
 

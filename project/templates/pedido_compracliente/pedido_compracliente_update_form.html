@@ -1,37 +1,53 @@
-<!-- pedido_compracliente_update_form.html -->
-
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}Atualizar Pedido de Compra do Cliente{% endblock %}
-
 {% block content %}
-  <div class="card">  
-    <div class="card-header">
-        <h3>Atualizar Informações do Pedido</h3>
-    </div> 
-    <div class="card-body">
-      <form method="post" id="pedidoForm">
-        {% csrf_token %}
-        {{ form_pedido.idcliente|as_crispy_field }}
-        {{ form_pedido.preco|as_crispy_field }}
+  <h2>{{ action }} Pedido de Compra do Cliente</h2>
+  
+  <form method="post" id="pedidoForm">
+    {% csrf_token %}
+    {{ form_pedido.idcliente}}
+    {{ form_pedido.preco }}
 
-        <!-- Detalhes do Pedido -->
-        <h4>Detalhes do Pedido</h4>
-        {% for detalhe_form in detalhes_forms.forms %}
-          <div class="detalhe">
-            {{ detalhe_form.idequipamento|as_crispy_field }}
-            {{ detalhe_form.quantidade|as_crispy_field }}
-            <!-- Adicione outros campos conforme necessário -->
-          </div>
-        {% endfor %}
+    <!-- Campos para detalhes existentes -->
+    {% for form in detalhes_forms %}
+      <div class="detalhe">
+        {{ form.idequipamento }}
+        {{ form.quantidade }}
+      </div>
+    {% endfor %}
 
-        <input type="submit" value="Atualizar">
-      </form>
+    <!-- Campos iniciais para um novo detalhe -->
+    <div id="detalhes">
+      <div class="detalhe">
+        {{ form_detalhes.idequipamento }}
+        {{ form_detalhes.quantidade }}
+      </div>
     </div>
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
 
-    <div class="card-footer d-flex">  
-        <a href="{% url 'pedido_compracliente_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
-    </div>
-  </div>
+    <input type="submit" value="Guardar">
+  </form>
+
+  <script>
+    function adicionarDetalhe() {
+      var detalhesDiv = document.getElementById('detalhes');
+      var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);
+
+      // Atualiza os atributos 'name' e 'id' dos campos clonados para evitar conflitos
+      updateAttributes(novoDetalhe);
+
+      detalhesDiv.appendChild(novoDetalhe);
+    }
+
+    function updateAttributes(element) {
+      var inputs = element.querySelectorAll('input');
+      inputs.forEach(function(input) {
+        var newName = input.getAttribute('name').replace(/_\d+_/g, '_' + (detalhesDiv.children.length) + '_');
+        var newId = input.getAttribute('id').replace(/_\d+_/g, '_' + (detalhesDiv.children.length) + '_');
+        input.setAttribute('name', newName);
+        input.setAttribute('id', newId);
+      });
+    }
+  </script>
 {% endblock %}
