@@ -136,6 +136,52 @@ class PedidoDetalhesForm(forms.ModelForm):
         self.fields['idequipamento'].widget = forms.Select(choices=equipamentos_choices)
 
 
+class PedidoCompraFornecedorForm(forms.Form):
+    # Lógica para obter a lista de fornecedores usando SQL puro
+    fornecedores_query = "SELECT idfornecedor, nomefornecedor FROM fornecedor"
+    with connection.cursor() as cursor:
+        cursor.execute(fornecedores_query)
+        fornecedores = cursor.fetchall()
+
+    # Criar lista de tuplas (idfornecedor, nomefornecedor) para usar como choices
+    fornecedores_choices = [(fornecedor[0], fornecedor[1]) for fornecedor in fornecedores]
+
+    datahorapedidofornecedor = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+    idfornecedor = forms.ChoiceField(choices=fornecedores_choices, label='Nome do Fornecedor')
+    preco = forms.IntegerField()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorapedido = cleaned_data.get('datahorapedidofornecedor')
+
+        if datahorapedido:
+            cleaned_data['datahorapedidofornecedor'] = datahorapedido.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorapedidofornecedor'] = None
+
+        return cleaned_data
+
+# DetalhesPedidocomprafornecedorForm
+class DetalhesPedidocomprafornecedorForm(forms.Form):
+    idcomponente = forms.IntegerField()
+    quantidade = forms.IntegerField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Lógica para obter dinamicamente a lista de componentes (ou equipamentos do fornecedor)
+        componentes_query = "SELECT idcomponente, nomecomponente FROM componente"
+        with connection.cursor() as cursor:
+            cursor.execute(componentes_query)
+            componentes = cursor.fetchall()
+
+        # Criar lista de tuplas (idcomponente, nomecomponente) para usar como choices
+        componentes_choices = [(str(componente[0]), componente[1]) for componente in componentes]
+
+        # Adicionar choices ao campo idcomponente
+        self.fields['idcomponente'] = forms.ChoiceField(choices=componentes_choices, label='Componente')
+
+
 class FolhaDeObraForm(forms.ModelForm):
     class Meta:
         model = FolhaDeObra

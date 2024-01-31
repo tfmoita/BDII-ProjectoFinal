@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalhes do Pedido de Compra para Fornecedor{% endblock %}
+
+{% block content %}
+  <div class="card">  
+    <div class="card-header">
+        <h3>Informações do Pedido</h3>
+    </div> 
+    <div class="card-body">
+        <p><strong>ID do Pedido:</strong> {{ pedido_compra_fornecedor.idpedidocomprafornecedor }}</p>
+        <p><strong>Fornecedor:</strong> {{ pedido_compra_fornecedor.nomefornecedor }}</p>
+        <p><strong>Data e Hora do Pedido:</strong> {{ pedido_compra_fornecedor.datahorapedidofornecedor }}</p>
+        <p><strong>Preço:</strong> {{ pedido_compra_fornecedor.preco }}</p>
+
+        <!-- Detalhes do Pedido -->
+        <h4>Detalhes do Pedido</h4>
+        <ul>
+          {% for detalhe in pedido_compra_fornecedor.detalhes_pedidocompra_fornecedor %}
+            <li>
+              <p><strong>Nome do Componente:</strong> {{ detalhe.2 }}</p>
+              <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
+              <!-- Adicione outros campos conforme necessário -->
+            </li>
+          {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card-footer d-flex">  
+        <a href="{% url 'pedido_comprafornecedor_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
+        <div class="ml-auto">
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'pedido_comprafornecedor_delete' pk=pedido_compra_fornecedor.idpedidocomprafornecedor %}">Excluir</a>
+        </div>
+    </div>
+  </div>
+{% endblock %}

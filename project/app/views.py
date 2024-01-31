@@ -5,9 +5,15 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm
 from datetime import datetime
 
+from django.shortcuts import render, redirect
+from django.http import Http404
+from django.db import connection, transaction
+from .forms import PedidoCompraClienteForm, PedidoDetalhesForm
+from django.forms import formset_factory
+import logging
 
 def index(request):
     return render(request, 'index.html')
@@ -534,12 +540,6 @@ def pedido_compracliente_create(request):
     return render(request, 'pedido_compracliente/pedido_compracliente_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
 
 
-from django.shortcuts import render, redirect
-from django.http import Http404
-from django.db import connection, transaction
-from .forms import PedidoCompraClienteForm, PedidoDetalhesForm
-from django.forms import formset_factory
-import logging
 
 
 # No seu views.py
@@ -659,11 +659,6 @@ def pedido_compracliente_update(request, pk):
         print(f"Erro ao processar a solicitação: {e}")
         logger.error(f"Erro ao processar a solicitação: {e}")
         raise Http404("Erro ao processar a solicitação")
-    
-# views.py
-from django.shortcuts import render, redirect
-from django.http import Http404
-from django.db import connection, transaction
 
 def pedido_compracliente_delete(request, pk):
     if request.method == 'POST':
@@ -685,148 +680,108 @@ def pedido_compracliente_delete(request, pk):
 
     return render(request, 'pedido_compracliente/pedido_compracliente_confirm_delete.html', {'idpedidocompracliente': pk})
 
-#detalhes pedido de compra de cliente views
-
-def detalhes_pedidocompracliente_list(request):
+def pedido_comprafornecedor_list(request):
     with connection.cursor() as cursor:
-        cursor.execute('SELECT * FROM fn_listar_detalhes_pedidocompracliente()')
+        cursor.execute('SELECT * FROM fn_listar_pedido_comprafornecedor()')
         columns = [col[0] for col in cursor.description]
-        detalhes_pedidocompracliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        pedidos_compra_fornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_list.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
+    return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_list.html', {'pedidos_compra_fornecedor': pedidos_compra_fornecedor})
 
-def detalhes_pedidocompracliente_detail(request, pk):
+#Pedido compra a fornecedor view
+
+def pedido_comprafornecedor_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s, %s, %s, %s)", [pk, 0, 0, 0])  
+        cursor.execute("CALL sp_pedido_comprafornecedor_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
         row = cursor.fetchone()
 
         if row:
-            detalhes_pedido_compra_cliente = {
-                'idpedidocompracliente': row[0],
-                'idequipamento': row[1],
-                'quantidade': row[2],
-                'iddetalhespedidocompracliente': pk
+            idfornecedor = row[0]
+            cursor.execute("SELECT nomefornecedor FROM fornecedor WHERE idfornecedor = %s", [idfornecedor])
+            nomefornecedor = cursor.fetchone()[0]  # Recupera o nome do fornecedor
+
+            # Recuperar detalhes do pedido de compra do fornecedor
+            cursor.execute("SELECT d.idcomponente, d.quantidade, c.nomecomponente FROM detalhes_pedidocomprafornecedor d INNER JOIN componente c ON d.idcomponente = c.idcomponente WHERE d.idpedidocomprafornecedor = %s", [pk])
+            detalhes_pedido_compra_fornecedor = cursor.fetchall()
+            print(detalhes_pedido_compra_fornecedor)
+
+            pedido_compra_fornecedor = {
+                'idfornecedor': idfornecedor,
+                'nomefornecedor': nomefornecedor,
+                'datahorapedidofornecedor': row[1],
+                'preco': row[2],
+                'idpedidocomprafornecedor': pk,
+                'detalhes_pedidocompra_fornecedor': detalhes_pedido_compra_fornecedor
             }
 
-            print("Detalhes Pedido Compra Cliente:", detalhes_pedido_compra_cliente)
+            return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_detail.html', {'pedido_compra_fornecedor': pedido_compra_fornecedor})
 
-            return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_detail.html', {'detalhes_pedido_compra_cliente': detalhes_pedido_compra_cliente})
-
-        raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
-
-def detalhes_pedidocompracliente_create(request):
-    form = DetalhesPedidocompraclienteForm()
+        raise Http404("Pedido de Compra do Fornecedor does not exist")
+    
+def pedido_comprafornecedor_create(request):
+    form_pedido = PedidoCompraFornecedorForm()
+    form_detalhes = DetalhesPedidocomprafornecedorForm()
 
     if request.method == 'POST':
-        form = DetalhesPedidocompraclienteForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            equipamento_id = data['idequipamento'].idequipamento  # Obtendo o ID do equipamento
+        form_pedido = PedidoCompraFornecedorForm(request.POST)
+        form_detalhes = DetalhesPedidocomprafornecedorForm(request.POST)
 
-            with connection.cursor() as cursor:
-                cursor.execute("CALL sp_detalhes_pedidocompracliente_create(%s, %s, %s)", [
-                               request.GET.get('id_pedidocompra'), equipamento_id, data['quantidade']])
-            return redirect('detalhes_pedidocompracliente_list')
+        if form_pedido.is_valid() and form_detalhes.is_valid():
+            with transaction.atomic():
+                # Criar o pedido de compra para fornecedor
+                data_pedido = form_pedido.cleaned_data
+                fornecedor_id = data_pedido['idfornecedor']
 
-    return render(request, 'pedido_compracliente/detalhes_pedidocompracliente_form.html', {'form': form})
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT nomefornecedor FROM fornecedor WHERE idfornecedor = %s", [fornecedor_id])
+                    nome_fornecedor = cursor.fetchone()[0]
 
-def detalhes_pedidocompracliente_update(request, pk):
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s)", [pk])
-            row = cursor.fetchone()
+                    cursor.execute("CALL sp_pedido_comprafornecedor_create(%s, %s, %s)", [
+                        fornecedor_id, None, data_pedido['preco']
+                    ])
 
-            if row:
-                detalhes_pedidocompracliente_data = {
-                    'idpedidocompracliente': row[1],
-                    'idequipamento': row[2],
-                    'quantidade': row[3],
-                }
-                form = DetalhesPedidocompraclienteForm(initial=detalhes_pedidocompracliente_data)
+                # Obter o ID do pedido recém-criado
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT currval('pedido_compra_idpedidocompra_seq')")
+                    id_pedido = cursor.fetchone()[0]
 
-                if request.method == 'POST':
-                    form = DetalhesPedidocompraclienteForm(request.POST)
-                    if form.is_valid():
-                        data = form.cleaned_data
-                        with connection.cursor() as cursor:
-                            cursor.execute("CALL sp_detalhes_pedidocompracliente_update(%s, %s, %s, %s)", [pk, data['idpedidocompracliente'], data['idequipamento'], data['quantidade']])
-                        return redirect('detalhes_pedidocompracliente_list')
-                else:
-                    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_form.html', {'form': form, 'action': 'Atualizar'})
-            else:
-                raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
+                # Criar detalhes para o pedido (suportando múltiplos detalhes)
+                idcomponentes = request.POST.getlist('idcomponente')
+                quantidades = request.POST.getlist('quantidade')
 
-    except Exception as e:
-        print(e)
-        raise Http404("Erro ao processar a solicitação")
+                for idcomponente, quantidade in zip(idcomponentes, quantidades):
+                    with connection.cursor() as cursor:
+                        cursor.execute("CALL sp_detalhes_pedidocomprafornecedor_create(%s, %s, %s)", [
+                            id_pedido, idcomponente, quantidade
+                        ])
 
-def detalhes_pedidocompracliente_delete(request, pk):
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("CALL sp_detalhes_pedidocompracliente_read(%s)", [pk])
-            row = cursor.fetchone()  
+            # Adicione nome_fornecedor ao contexto do template
+            context = {
+                'form_pedido': form_pedido,
+                'form_detalhes': form_detalhes,
+                'nome_fornecedor': nome_fornecedor,
+            }
 
-            if row:
-                detalhes_pedidocompracliente = get_object_or_404(DetalhesPedidocompracliente, pk=pk)
-                if request.method == 'POST': 
-                    with connection.cursor() as delete_cursor:
-                        delete_cursor.execute("CALL sp_detalhes_pedidocompracliente_delete(%s)", [pk])
-                    return redirect('detalhes_pedidocompracliente_list')
-                else:
-                    return render(request, 'detalhes_pedidocompracliente/detalhes_pedidocompracliente_confirm_delete.html', {'detalhes_pedidocompracliente': detalhes_pedidocompracliente})
-            else:
-                raise Http404("Detalhes do Pedido de Compra do Cliente does not exist")
+            return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_list.html', context)
 
-    except Exception as e:
-        print(e)
-        raise Http404("Erro ao processar a solicitação")
+    return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_form.html', {'form_pedido': form_pedido, 'form_detalhes': form_detalhes})
 
-#guia de remessa read de equipamentos
-
-def guia_remessafornecedor_list(request):
-    with connection.cursor() as cursor:
-        cursor.execute('SELECT * FROM fn_listar_guia_remessafornecedor()')
-        columns = [col[0] for col in cursor.description]
-        guia_remessafornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
-        print(guia_remessafornecedor)
-    return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', {'guia_remessa_fornecedor': guia_remessafornecedor})
-  
-
-
-#folha de obra
-
-def folha_de_obra_list(request):
-    folha_de_obra = FolhaDeObra.objects.all()
-    return render(request, 'folhadeobra/folha_de_obra_list.html', {'folhadeobra': folha_de_obra})
-
-def folha_de_obra_detail(request, pk):
-    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
-    return render(request, 'folhadeobra/folha_de_obra_detail.html', {'folhadeobra': folha_de_obra})
-
-def folha_de_obra_create(request):
+def pedido_comprafornecedor_delete(request, pk):
     if request.method == 'POST':
-        form = FolhaDeObraForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('folha_de_obra_list')
-    else:
-        form = FolhaDeObraForm()
-    return render(request, 'folhadeobra/folha_de_obra_form.html', {'form': form, 'action': 'Criar'})
+        try:
+            with transaction.atomic():
+                # Chame o procedimento armazenado para deletar os detalhes do pedido de compra para fornecedor
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_pedidocomprafornecedor_delete(%s)", [pk])
 
-def folha_de_obra_update(request, pk):
-    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
-    if request.method == 'POST':
-        form = FolhaDeObraForm(request.POST, instance=folha_de_obra)
-        if form.is_valid():
-            form.save()
-            return redirect('folha_de_obra_list')
-    else:
-        form = FolhaDeObraForm(instance=folha_de_obra)
-    return render(request, 'folha_de_obra/folha_de_obra_form.html', {'form': form, 'action': 'Atualizar', 'folha_de_obra': folha_de_obra})
+                # Chame o procedimento armazenado para deletar o pedido de compra para fornecedor
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_pedido_comprafornecedor_delete(%s)", [pk])
 
-def folha_de_obra_delete(request, pk):
-    folha_de_obra = get_object_or_404(FolhaDeObra, pk=pk)
-    if request.method == 'POST':
-        folha_de_obra.delete()
-        return redirect('folha_de_obra_list')
-    return render(request, 'folha_de_obra/folha_de_obra_confirm_delete.html', {'folha_de_obra': folha_de_obra})
+                return redirect('pedido_comprafornecedor_list')
+
+        except Exception as e:
+            print(f"Erro ao processar a solicitação: {e}")
+            raise Http404("Erro ao processar a solicitação")
+
+    return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_confirm_delete.html', {'idpedidocomprafornecedor': pk})

@@ -1,0 +1,12 @@
+<!-- pedido_comprafornecedor_confirm_delete.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Confirmar Exclusão</h2>
+  <p>Tem a certeza que deseja excluir o pedido de compra para fornecedor?</p>
+  <form method="post" action="{% url 'pedido_comprafornecedor_delete' pk=idpedidocomprafornecedor %}">
+    {% csrf_token %}
+    <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
+    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'pedido_comprafornecedor_list' %}">Cancelar</a>
+  </form>
+{% endblock %}
