@@ -5,6 +5,20 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.db import connection
 
+class ArmazemForm(forms.ModelForm):
+    class Meta:
+        model = Armazem
+        fields = '__all__'
+        labels = {
+            'codigopostal': 'Código Postal',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
+
 class FornecedorForm(forms.ModelForm):
     class Meta:
         model = Fornecedor
@@ -182,23 +196,66 @@ class DetalhesPedidocomprafornecedorForm(forms.Form):
         self.fields['idcomponente'] = forms.ChoiceField(choices=componentes_choices, label='Componente')
 
 
-class FolhaDeObraForm(forms.ModelForm):
-    class Meta:
-        model = FolhaDeObra
-        fields = '__all__'
-        labels = {
-            'idmaodeobra': 'Mão de Obra',
-            'idequipamento': 'Equipamento',
-            'quantidadeequipamento': 'Quantidade de Equipamento',
-            'datahorainicio': 'Data e Hora de Início',
-            'datahorafim': 'Data e Hora de Fim',
-            'idarmazem': 'Armazém',
-            'precomedio': 'Preço Médio',
-        }
+# GuiaRemessafornecedorForm
+class GuiaRemessafornecedorForm(forms.Form):
+    # Lógica para obter a lista de pedidos de compra do fornecedor usando SQL puro
+    pedidos_compra_fornecedor_query = "SELECT idpedidocomprafornecedor FROM pedido_comprafornecedor"
+    with connection.cursor() as cursor:
+        cursor.execute(pedidos_compra_fornecedor_query)
+        pedidos_compra_fornecedor = cursor.fetchall()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Guardar'))
+    # Criar lista de tuplas (idpedidocomprafornecedor, idpedidocomprafornecedor) para usar como choices
+    pedidos_compra_fornecedor_choices = [(pedido[0], pedido[0]) for pedido in pedidos_compra_fornecedor]
+
+    idpedidocomprafornecedor = forms.ChoiceField(choices=pedidos_compra_fornecedor_choices, label='ID do Pedido de Compra do Fornecedor')
+    datahoraguiafornecedor = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahoraguiafornecedor = cleaned_data.get('datahoraguiafornecedor')
+
+        if datahoraguiafornecedor:
+            cleaned_data['datahoraguiafornecedor'] = datahoraguiafornecedor.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahoraguiafornecedor'] = None
+
+        return cleaned_data
+
+
+# DetalhesGuiaremessafornecedorForm
+class DetalhesGuiaremessafornecedorForm(forms.Form):
+    # Lógica para obter dinamicamente a lista de armazéns usando SQL puro
+    armazens_query = "SELECT idarmazem, codigopostal FROM armazem"
+    with connection.cursor() as cursor:
+        cursor.execute(armazens_query)
+        armazens = cursor.fetchall()
+
+    # Criar lista de tuplas (idarmazem, codigopostal) para usar como choices
+    armazens_choices = [(str(armazem[0]), armazem[1]) for armazem in armazens]
+
+    # Lógica para obter dinamicamente a lista de componentes usando SQL puro
+    componentes_query = "SELECT idcomponente, nomecomponente FROM componente"
+    with connection.cursor() as cursor:
+        cursor.execute(componentes_query)
+        componentes = cursor.fetchall()
+
+    # Criar lista de tuplas (idcomponente, nomecomponente) para usar como choices
+    componentes_choices = [(str(componente[0]), componente[1]) for componente in componentes]
+
+    idarmazem = forms.ChoiceField(choices=armazens_choices, label='Armazém')
+    idcomponente = forms.ChoiceField(choices=componentes_choices, label='Componente')
+    quantidade = forms.IntegerField()
+    datahoradetalhesguiafornecedor = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahoradetalhesguiafornecedor = cleaned_data.get('datahoradetalhesguiafornecedor')
+
+        if datahoradetalhesguiafornecedor:
+            cleaned_data['datahoradetalhesguiafornecedor'] = datahoradetalhesguiafornecedor.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahoradetalhesguiafornecedor'] = None
+
+        return cleaned_data
+
         

@@ -4,8 +4,8 @@ from django.db import transaction
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, FolhaDeObraForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm
 from datetime import datetime
 
 from django.shortcuts import render, redirect
@@ -415,44 +415,6 @@ def componente_delete(request, pk):
         raise Http404("Erro ao processar a solicitação")
 
 
-#Pedido compra a fornecedor view
-
-
-def pedidocomprafornecedor_list(request):
-    pedidos = PedidoComprafornecedor.objects.all()
-    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_list.html', {'pedidos': pedidos})
-
-def pedidocomprafornecedor_detail(request, pk):
-    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
-    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_detail.html', {'pedido': pedido})
-
-def pedidocomprafornecedor_create(request):
-    if request.method == 'POST':
-        form = PedidoCompraFornecedorForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('pedidocomprafornecedor_list')
-    else:
-        form = PedidoCompraFornecedorForm()
-    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_form.html', {'form': form, 'action': 'Criar'})
-
-def pedidocomprafornecedor_update(request, pk):
-    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
-    if request.method == 'POST':
-        form = PedidoCompraFornecedorForm(request.POST, instance=pedido)
-        if form.is_valid():
-            form.save()
-            return redirect('pedidocomprafornecedor_list')
-    else:
-        form = PedidoCompraFornecedorForm(instance=pedido)
-    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_form.html', {'form': form, 'action': 'Editar', 'pedido': pedido})
-
-def pedidocomprafornecedor_delete(request, pk):
-    pedido = get_object_or_404(PedidoComprafornecedor, pk=pk)
-    if request.method == 'POST':
-        pedido.delete()
-        return redirect('pedidocomprafornecedor_list')
-    return render(request, 'pedidocomprafornecedor/pedidocomprafornecedor_confirm_delete.html', {'pedido': pedido})
 
 #Pedido compra a cliente view
 
@@ -680,6 +642,8 @@ def pedido_compracliente_delete(request, pk):
 
     return render(request, 'pedido_compracliente/pedido_compracliente_confirm_delete.html', {'idpedidocompracliente': pk})
 
+#Pedido compra a fornecedor view
+
 def pedido_comprafornecedor_list(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM fn_listar_pedido_comprafornecedor()')
@@ -688,7 +652,6 @@ def pedido_comprafornecedor_list(request):
 
     return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_list.html', {'pedidos_compra_fornecedor': pedidos_compra_fornecedor})
 
-#Pedido compra a fornecedor view
 
 def pedido_comprafornecedor_detail(request, pk):
     with connection.cursor() as cursor:
@@ -785,3 +748,190 @@ def pedido_comprafornecedor_delete(request, pk):
             raise Http404("Erro ao processar a solicitação")
 
     return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_confirm_delete.html', {'idpedidocomprafornecedor': pk})
+
+def guia_remessafornecedor_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_guia_remessafornecedor()')
+        columns = [col[0] for col in cursor.description]
+        guias_remessa_fornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', {'guias_remessa_fornecedor': guias_remessa_fornecedor})
+
+def guia_remessafornecedor_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_guia_remessafornecedor_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
+        row = cursor.fetchone()
+
+        if row:
+            idfornecedor = row[0]
+            cursor.execute("SELECT nomefornecedor FROM fornecedor WHERE idfornecedor = %s", [idfornecedor])
+            nomefornecedor = cursor.fetchone()[0]  # Recupera o nome do fornecedor
+
+            # Recuperar detalhes da guia de remessa para fornecedor, incluindo informações do armazém
+            cursor.execute("SELECT d.idcomponente, d.quantidade, c.nomecomponente, a.codigopostal FROM detalhes_guiaremessafornecedor d INNER JOIN componente c ON d.idcomponente = c.idcomponente INNER JOIN armazem a ON d.idarmazem = a.idarmazem WHERE d.idguiaremessafornecedor = %s", [pk])
+            detalhes_guia_remessa_fornecedor = cursor.fetchall()
+
+            guia_remessa_fornecedor = {
+                'idfornecedor': idfornecedor,
+                'nomefornecedor': nomefornecedor,
+                'datahoraguiafornecedor': row[1],
+                'idguiaremessafornecedor': pk,
+                'detalhes_guiaremessafornecedor': detalhes_guia_remessa_fornecedor
+            }
+
+            return render(request, 'guia_remessafornecedor/guia_remessafornecedor_detail.html', {'guia_remessa_fornecedor': guia_remessa_fornecedor})
+
+        raise Http404("Guia de Remessa para Fornecedor does not exist")
+
+def guia_remessafornecedor_create(request):
+    form_guia_remessa = GuiaRemessafornecedorForm()
+    form_detalhes = DetalhesGuiaremessafornecedorForm()
+
+    if request.method == 'POST':
+        form_guia_remessa = GuiaRemessafornecedorForm(request.POST)
+        form_detalhes = DetalhesGuiaremessafornecedorForm(request.POST)
+
+        if form_guia_remessa.is_valid() and form_detalhes.is_valid():
+            with transaction.atomic():
+                # Criar a guia de remessa para fornecedor
+                data_guia_remessa = form_guia_remessa.cleaned_data
+                pedido_compra_fornecedor_id = data_guia_remessa['idpedidocomprafornecedor']
+
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT nomefornecedor FROM fornecedor WHERE idfornecedor = (SELECT idfornecedor FROM pedido_comprafornecedor WHERE idpedidocomprafornecedor = %s)", [pedido_compra_fornecedor_id])
+                    nome_fornecedor = cursor.fetchone()[0]
+
+                    cursor.execute("CALL sp_guia_remessafornecedor_create(%s, %s)", [
+                        pedido_compra_fornecedor_id, data_guia_remessa['datahoraguiafornecedor']
+                    ])
+
+                # Obter o ID da guia de remessa recém-criada
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT currval('guia_remessa_idguiaremessa_seq')")
+                    id_guia_remessa = cursor.fetchone()[0]
+
+                # Criar detalhes para a guia de remessa (suportando múltiplos detalhes)
+                idarmazens = request.POST.getlist('idarmazem')
+                idcomponentes = request.POST.getlist('idcomponente')
+                quantidades = request.POST.getlist('quantidade')
+
+                for idarmazem, idcomponente, quantidade in zip(idarmazens, idcomponentes, quantidades):
+                    with connection.cursor() as cursor:
+                        cursor.execute("CALL sp_detalhes_guiaremessafornecedor_create(%s, %s, %s, %s, %s)", [
+                            id_guia_remessa, idarmazem, idcomponente, quantidade, None
+                        ])
+
+            # Adicione nome_fornecedor ao contexto do template
+            context = {
+                'form_guia_remessa': form_guia_remessa,
+                'form_detalhes': form_detalhes,
+                'nome_fornecedor': nome_fornecedor,
+            }
+
+            return render(request, 'guia_remessafornecedor/guia_remessafornecedor_list.html', context)
+
+    return render(request, 'guia_remessafornecedor/guia_remessafornecedor_form.html', {'form_guia_remessa': form_guia_remessa, 'form_detalhes': form_detalhes})
+
+def guia_remessafornecedor_delete(request, pk):
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Chame o procedimento armazenado para deletar os detalhes da guia de remessa para fornecedor
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_guiaremessafornecedor_delete(%s)", [pk])
+
+                # Chame o procedimento armazenado para deletar a guia de remessa para fornecedor
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_guia_remessafornecedor_delete(%s)", [pk])
+
+                return redirect('guia_remessafornecedor_list')
+
+        except Exception as e:
+            print(f"Erro ao processar a solicitação: {e}")
+            raise Http404("Erro ao processar a solicitação")
+
+    return render(request, 'guia_remessafornecedor/guia_remessafornecedor_confirm_delete.html', {'idguiaremessafornecedor': pk})
+
+def armazem_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_armazem()')
+        columns = [col[0] for col in cursor.description]
+        armazens = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'armazem/armazem_list.html', {'armazens': armazens})
+
+def armazem_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_armazem_read(%s, %s)", [pk, ''])
+        row = cursor.fetchone()
+
+        if row:
+            armazem = {
+                'codigopostal': row[0],
+                'idarmazem': pk
+            }
+            return render(request, 'armazem/armazem_detail.html', {'armazem': armazem})
+
+        raise Http404("Armazem does not exist")
+    
+def armazem_create(request):
+    form = ArmazemForm()
+
+    if request.method == 'POST':
+        form = ArmazemForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_armazem_create(%s)", [data['codigopostal']])
+            return redirect('armazem_list')
+
+    return render(request, 'armazem/armazem_form.html', {'form': form})
+
+def armazem_update(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_armazem_read(%s, %s)", [pk, ''])
+            row = cursor.fetchone()
+
+            if row:
+                armazem_data = {
+                    'codigopostal': row[0],
+                }
+                form = ArmazemForm(initial=armazem_data)
+
+                if request.method == 'POST':
+                    form = ArmazemForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_armazem_update(%s, %s)", [pk, data['codigopostal']])
+                        return redirect('armazem_list')
+                else:
+                    return render(request, 'armazem/armazem_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Armazém does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+    
+def armazem_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_armazem_read(%s, %s)", [pk, ''])
+            row = cursor.fetchone()
+
+            if row:
+                armazem = get_object_or_404(Armazem, pk=pk)  # Certifique-se de importar o modelo Armazem
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_armazem_delete(%s)", [pk])
+                    return redirect('armazem_list')
+                else:
+                    return render(request, 'armazem/armazem_confirm_delete.html', {'armazem': armazem})
+            else:
+                raise Http404("Armazém does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")

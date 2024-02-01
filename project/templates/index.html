@@ -41,6 +41,14 @@
             <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Exportação de encomendas a fornecedores (JSON ou XML).</a></li>
           </ul>
           <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Armazéns</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'armazem_list' %}">Armazém</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>Guias de remessa de Fornecedores</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'guia_remessafornecedor_list' %}">Guias a Fornecedor</a></li>
+          </ul>
+          <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Pedidos de compra de Cliente</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'pedido_compracliente_list' %}">Pedidos de compra de Cliente</a></li>
           </ul>

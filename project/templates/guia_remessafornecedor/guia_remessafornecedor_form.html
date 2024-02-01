@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <h2>{{ action }} Guia de Remessa para Fornecedor</h2>
+  
+  <form method="post" id="guiaRemessaForm">
+    {% csrf_token %}
+    {{ form_guia_remessa.idpedidocomprafornecedor|as_crispy_field }}
+
+    <!-- Campos iniciais para um detalhe -->
+    <div id="detalhes">
+        <div class="detalhe">
+          {{ form_detalhes.idarmazem|as_crispy_field }}
+          {{ form_detalhes.idcomponente|as_crispy_field }} 
+          {{ form_detalhes.quantidade|as_crispy_field }}
+          
+        </div>
+    </div>
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
+
+    <input type="submit" value="Guardar">
+  </form>
+
+  <script>
+  var contadorDetalhes = 1;
+
+  function adicionarDetalhe() {
+    var detalhesDiv = document.getElementById('detalhes');
+    var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);
+
+    // Atualiza os atributos 'name' e 'id' dos campos clonados
+    updateAttributes(novoDetalhe);
+
+    detalhesDiv.appendChild(novoDetalhe);
+    contadorDetalhes++;
+  }
+
+  function updateAttributes(element) {
+    var inputs = element.querySelectorAll('input, select');
+    inputs.forEach(function(input) {
+      // Atualiza o índice no nome e no id dos campos clonados
+      var newName = input.getAttribute('name').replace(/\d+/, contadorDetalhes);
+      var newId = input.getAttribute('id').replace(/\d+/, contadorDetalhes);
+      input.setAttribute('name', newName);
+      input.setAttribute('id', newId);
+    });
+  }
+</script>
+
+{% endblock %}

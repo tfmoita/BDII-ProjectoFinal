@@ -15,6 +15,11 @@ urlpatterns = [
     path('cliente/<int:pk>/update/', views.cliente_update, name='cliente_update'),
     path('cliente/<int:pk>/delete/', views.cliente_delete, name='cliente_delete'),
 
+    path('armazens/', views.armazem_list, name='armazem_list'),
+    path('armazem/<int:pk>/', views.armazem_detail, name='armazem_detail'),
+    path('armazem/new/', views.armazem_create, name='armazem_create'),
+    path('armazem/<int:pk>/update/', views.armazem_update, name='armazem_update'),
+    path('armazem/<int:pk>/delete/', views.armazem_delete, name='armazem_delete'),
 
     path('equipamentos/', views.equipamento_list, name='equipamento_list'),
     path('equipamento/<int:pk>/', views.equipamento_detail, name='equipamento_detail'),
@@ -37,5 +42,10 @@ urlpatterns = [
     path('pedidocompracliente/<int:pk>/', views.pedido_compracliente_detail, name='pedido_compracliente_detail'),
     path('pedidocompracliente/create/', views.pedido_compracliente_create, name='pedido_compracliente_create'),
     path('pedidocompracliente/<int:pk>/update/', views.pedido_compracliente_update, name='pedido_compracliente_update'),
-    path('pedidocompracliente/<int:pk>/delete/', views.pedido_compracliente_delete, name='pedido_compracliente_delete')
+    path('pedidocompracliente/<int:pk>/delete/', views.pedido_compracliente_delete, name='pedido_compracliente_delete'),
+
+    path('guiaremessafornecedor/', views.guia_remessafornecedor_list, name='guia_remessafornecedor_list'),
+    path('guiaremessafornecedor/<int:pk>/', views.guia_remessafornecedor_detail, name='guia_remessafornecedor_detail'),
+    path('guiaremessafornecedor/create/', views.guia_remessafornecedor_create, name='guia_remessafornecedor_create'),
+    path('guiaremessafornecedor/<int:pk>/delete/', views.guia_remessafornecedor_delete, name='guia_remessafornecedor_delete')
 ]

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalhes da Guia de Remessa para Fornecedor{% endblock %}
+
+{% block content %}
+  <div class="card">  
+    <div class="card-header">
+        <h3>Informações da Guia de Remessa</h3>
+    </div> 
+    <div class="card-body">
+        <p><strong>ID da Guia:</strong> {{ guia_remessa_fornecedor.idguiaremessafornecedor }}</p>
+        <p><strong>Fornecedor:</strong> {{ guia_remessa_fornecedor.nomefornecedor }}</p>
+        <p><strong>Data e Hora da Guia:</strong> {{ guia_remessa_fornecedor.datahoraguiafornecedor }}</p>
+
+        <!-- Detalhes da Guia -->
+        <h4>Detalhes da Guia</h4>
+        <ul>
+          {% for detalhe in guia_remessa_fornecedor.detalhes_guia_remesa_fornecedor %}
+            <li>
+              <p><strong>Nome do Componente:</strong> {{ detalhe.nomecomponente }}</p>
+              <p><strong>Quantidade:</strong> {{ detalhe.quantidade }}</p>
+              <p><strong>Armazém:</strong> {{ detalhe.nomearmazem }}</p>
+              <!-- Adicione outros campos conforme necessário -->
+            </li>
+          {% endfor %}
+        </ul>
+    </div>
+
+    <div class="card-footer d-flex">  
+        <a href="{% url 'guia_remessafornecedor_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Guias</a>
+        <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'guia_remessafornecedor_update' pk=guia_remessa_fornecedor.idguiaremessafornecedor %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'guia_remessafornecedor_delete' pk=guia_remessa_fornecedor.idguiaremessafornecedor %}">Excluir</a>
+        </div>
+    </div>
+  </div>
+{% endblock %}
