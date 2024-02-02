@@ -257,5 +257,69 @@ class DetalhesGuiaremessafornecedorForm(forms.Form):
             cleaned_data['datahoradetalhesguiafornecedor'] = None
 
         return cleaned_data
+    
+
+    # GuiaRemessaclienteForm
+class GuiaRemessaclienteForm(forms.Form):
+    # Lógica para obter a lista de pedidos de compra do cliente usando SQL puro
+    pedidos_compra_cliente_query = "SELECT idpedidocompracliente FROM pedido_compracliente"
+    with connection.cursor() as cursor:
+        cursor.execute(pedidos_compra_cliente_query)
+        pedidos_compra_cliente = cursor.fetchall()
+
+    # Criar lista de tuplas (idpedidocompracliente, idpedidocompracliente) para usar como choices
+    pedidos_compra_cliente_choices = [(pedido[0], pedido[0]) for pedido in pedidos_compra_cliente]
+
+    idpedidocompracliente = forms.ChoiceField(choices=pedidos_compra_cliente_choices, label='ID do Pedido de Compra do Cliente')
+    datahoraguiacliente = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahoraguiacliente = cleaned_data.get('datahoraguiacliente')
+
+        if datahoraguiacliente:
+            cleaned_data['datahoraguiacliente'] = datahoraguiacliente.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahoraguiacliente'] = None
+
+        return cleaned_data
+
+
+# DetalhesGuiaremessaclienteForm
+class DetalhesGuiaremessaclienteForm(forms.Form):
+    # Lógica para obter dinamicamente a lista de armazéns usando SQL puro
+    armazens_query = "SELECT idarmazem, codigopostal FROM armazem"
+    with connection.cursor() as cursor:
+        cursor.execute(armazens_query)
+        armazens = cursor.fetchall()
+
+    # Criar lista de tuplas (idarmazem, codigopostal) para usar como choices
+    armazens_choices = [(str(armazem[0]), armazem[1]) for armazem in armazens]
+
+    # Lógica para obter dinamicamente a lista de equipamentos usando SQL puro
+    equipamentos_query = "SELECT idequipamento, nomeequipamento FROM equipamento"
+    with connection.cursor() as cursor:
+        cursor.execute(equipamentos_query)
+        equipamentos = cursor.fetchall()
+
+    # Criar lista de tuplas (idequipamento, nomeequipamento) para usar como choices
+    equipamentos_choices = [(str(equipamento[0]), equipamento[1]) for equipamento in equipamentos]
+
+    idarmazem = forms.ChoiceField(choices=armazens_choices, label='Armazém')
+    idequipamento = forms.ChoiceField(choices=equipamentos_choices, label='Equipamento')
+    quantidade = forms.IntegerField()
+    datahoradetalhesguiacliente = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahoradetalhesguiacliente = cleaned_data.get('datahoradetalhesguiacliente')
+
+        if datahoradetalhesguiacliente:
+            cleaned_data['datahoradetalhesguiacliente'] = datahoradetalhesguiacliente.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahoradetalhesguiacliente'] = None
+
+        return cleaned_data
+
 
         

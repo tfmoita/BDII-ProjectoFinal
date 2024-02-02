@@ -5,7 +5,7 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm
 from datetime import datetime
 
 from django.shortcuts import render, redirect
@@ -593,12 +593,13 @@ def pedido_compracliente_update(request, pk):
                         if all(form.is_valid() for form in detalhes_forms):
                             for i, form in enumerate(detalhes_forms):
                                 detalhe_data = form.cleaned_data
+                                idpedidocompracliente = detalhe_data['idpedidocompracliente'] #coloquei isto a mais e no cursor.execute tb
                                 idequipamento = detalhe_data['idequipamento']
                                 quantidade = detalhe_data['quantidade']
 
                                 with connection.cursor() as cursor:
-                                    cursor.execute("CALL sp_detalhes_pedidocompracliente_update(%s, %s, %s, %s)",
-                                                [pk, idequipamento, quantidade, i + 1])
+                                    cursor.execute("CALL sp_detalhes_pedidocompracliente_update(%s, %s, %s, %s, %s)",
+                                                [pk, idpedidocompracliente, idequipamento, quantidade, i + 1])
 
                             logger.info(f"Pedido de Compra do Cliente atualizado com sucesso: {pk}")
                             return redirect('pedido_compracliente_list')
@@ -749,6 +750,8 @@ def pedido_comprafornecedor_delete(request, pk):
 
     return render(request, 'pedido_comprafornecedor/pedido_comprafornecedor_confirm_delete.html', {'idpedidocomprafornecedor': pk})
 
+# views da guia de remessa do fornecedor
+
 def guia_remessafornecedor_list(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM fn_listar_guia_remessafornecedor()')
@@ -759,25 +762,32 @@ def guia_remessafornecedor_list(request):
 
 def guia_remessafornecedor_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_guia_remessafornecedor_read(%s, %s, %s, %s)", [pk, 0, None, 0])  
+        cursor.execute("CALL sp_guia_remessafornecedor_read(%s, %s, %s)", [pk, 0, None])  
         row = cursor.fetchone()
 
         if row:
             idfornecedor = row[0]
             cursor.execute("SELECT nomefornecedor FROM fornecedor WHERE idfornecedor = %s", [idfornecedor])
-            nomefornecedor = cursor.fetchone()[0]  # Recupera o nome do fornecedor
+            nomefornecedor = cursor.fetchone()  # Recupera o nome do fornecedor
 
             # Recuperar detalhes da guia de remessa para fornecedor, incluindo informações do armazém
             cursor.execute("SELECT d.idcomponente, d.quantidade, c.nomecomponente, a.codigopostal FROM detalhes_guiaremessafornecedor d INNER JOIN componente c ON d.idcomponente = c.idcomponente INNER JOIN armazem a ON d.idarmazem = a.idarmazem WHERE d.idguiaremessafornecedor = %s", [pk])
             detalhes_guia_remessa_fornecedor = cursor.fetchall()
+
+            cursor.execute("SELECT idpedidocomprafornecedor FROM guia_remessafornecedor WHERE idguiaremessafornecedor = %s", [pk])
+            idpedidocomprafornecedor = cursor.fetchone()[0]
+
+            print("Detalhes da Guia:", detalhes_guia_remessa_fornecedor)
 
             guia_remessa_fornecedor = {
                 'idfornecedor': idfornecedor,
                 'nomefornecedor': nomefornecedor,
                 'datahoraguiafornecedor': row[1],
                 'idguiaremessafornecedor': pk,
+                'idpedidocomprafornecedor': idpedidocomprafornecedor,
                 'detalhes_guiaremessafornecedor': detalhes_guia_remessa_fornecedor
             }
+            
 
             return render(request, 'guia_remessafornecedor/guia_remessafornecedor_detail.html', {'guia_remessa_fornecedor': guia_remessa_fornecedor})
 
@@ -818,7 +828,7 @@ def guia_remessafornecedor_create(request):
                 for idarmazem, idcomponente, quantidade in zip(idarmazens, idcomponentes, quantidades):
                     with connection.cursor() as cursor:
                         cursor.execute("CALL sp_detalhes_guiaremessafornecedor_create(%s, %s, %s, %s, %s)", [
-                            id_guia_remessa, idarmazem, idcomponente, quantidade, None
+                           idarmazem, id_guia_remessa, idcomponente, quantidade, None
                         ])
 
             # Adicione nome_fornecedor ao contexto do template
@@ -851,6 +861,8 @@ def guia_remessafornecedor_delete(request, pk):
             raise Http404("Erro ao processar a solicitação")
 
     return render(request, 'guia_remessafornecedor/guia_remessafornecedor_confirm_delete.html', {'idguiaremessafornecedor': pk})
+
+# views do armazem
 
 def armazem_list(request):
     with connection.cursor() as cursor:
@@ -935,3 +947,117 @@ def armazem_delete(request, pk):
     except Exception as e:
         print(e)
         raise Http404("Erro ao processar a solicitação")
+    
+#views da guia de remessa ao cliente
+    
+def guia_remessacliente_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_guia_remessacliente()')
+        columns = [col[0] for col in cursor.description]
+        guias_remessa_cliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'guia_remessacliente/guia_remessacliente_list.html', {'guias_remessa_cliente': guias_remessa_cliente})
+
+
+def guia_remessacliente_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_guia_remessacliente_read(%s, %s, %s)", [pk, 0, None])  
+        row = cursor.fetchone()
+
+        if row:
+            idcliente = row[0]
+            cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = %s", [idcliente])
+            nomecliente = cursor.fetchone()  # Recupera o nome do cliente
+
+            # Recuperar detalhes da guia de remessa para cliente, incluindo informações do armazém
+            cursor.execute("SELECT d.idequipamento, d.quantidade, c.nomeequipamento FROM detalhes_guiaremessacliente d INNER JOIN equipamento c ON d.idequipamento = c.idequipamento INNER JOIN armazem a ON d.idarmazem = a.idarmazem WHERE d.idguiaremessacliente = %s", [pk])
+            detalhes_guia_remessa_cliente = cursor.fetchall()
+
+            cursor.execute("SELECT idpedidocompracliente FROM guia_remessacliente WHERE idguiaremessacliente = %s", [pk])
+            idpedidocompracliente = cursor.fetchone()[0]
+
+            print("Detalhes da Guia:", detalhes_guia_remessa_cliente)
+
+            guia_remessa_cliente = {
+                'idcliente': idcliente,
+                'nomecliente': nomecliente,
+                'datahoraguiacliente': row[1],
+                'idguiaremessacliente': pk,
+                'idpedidocompracliente': idpedidocompracliente,
+                'detalhes_guiaremessacliente': detalhes_guia_remessa_cliente
+            }
+
+            return render(request, 'guia_remessacliente/guia_remessacliente_detail.html', {'guia_remessa_cliente': guia_remessa_cliente})
+
+        raise Http404("Guia de Remessa para Cliente does not exist")
+
+
+def guia_remessacliente_create(request):
+    form_guia_remessa = GuiaRemessaclienteForm()
+    form_detalhes = DetalhesGuiaremessaclienteForm()
+
+    if request.method == 'POST':
+        print(request.POST)
+        form_guia_remessa = GuiaRemessaclienteForm(request.POST)
+        form_detalhes = DetalhesGuiaremessaclienteForm(request.POST)
+
+        if form_guia_remessa.is_valid() and form_detalhes.is_valid():
+            with transaction.atomic():
+                # Criar a guia de remessa para cliente
+                data_guia_remessa = form_guia_remessa.cleaned_data
+                pedido_compra_cliente_id = data_guia_remessa['idpedidocompracliente']
+
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT nomecliente FROM cliente WHERE idcliente = (SELECT idcliente FROM pedido_compracliente WHERE idpedidocompracliente = %s)", [pedido_compra_cliente_id])
+                    nome_cliente = cursor.fetchone()[0]
+
+                    cursor.execute("CALL sp_guia_remessacliente_create(%s, %s)", [
+                        pedido_compra_cliente_id, data_guia_remessa['datahoraguiacliente']
+                    ])
+
+                # Obter o ID da guia de remessa recém-criada
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT currval('guia_remessacliente_idguiaremessacliente_seq')")
+                    id_guia_remessa = cursor.fetchone()[0]
+
+                # Criar detalhes para a guia de remessa (suportando múltiplos detalhes)
+                idarmazens = request.POST.getlist('idarmazem')
+                idequipamentos = request.POST.getlist('idequipamento')
+                quantidades = request.POST.getlist('quantidade')
+
+                for idarmazem, idequipamento, quantidade in zip(idarmazens, idequipamentos, quantidades):
+                    with connection.cursor() as cursor:
+                        cursor.execute("CALL sp_detalhes_guiaremessacliente_create(%s, %s, %s, %s, %s)", [
+                            idarmazem, id_guia_remessa, quantidade, idequipamento, None
+                        ])
+
+            # Adicione nome_cliente ao contexto do template
+            context = {
+                'form_guia_remessa': form_guia_remessa,
+                'form_detalhes': form_detalhes,
+                'nome_cliente': nome_cliente,
+            }
+
+            return render(request, 'guia_remessacliente/guia_remessacliente_list.html', context)
+
+    return render(request, 'guia_remessacliente/guia_remessacliente_form.html', {'form_guia_remessa': form_guia_remessa, 'form_detalhes': form_detalhes})
+
+def guia_remessacliente_delete(request, pk):
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Chame o procedimento armazenado para deletar os detalhes da guia de remessa para cliente
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_guiaremessacliente_delete(%s)", [pk])
+
+                # Chame o procedimento armazenado para deletar a guia de remessa para cliente
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_guia_remessacliente_delete(%s)", [pk])
+
+                return redirect('guia_remessacliente_list')
+
+        except Exception as e:
+            print(f"Erro ao processar a solicitação: {e}")
+            raise Http404("Erro ao processar a solicitação")
+
+    return render(request, 'guia_remessacliente/guia_remessacliente_confirm_delete.html', {'idguiaremessacliente': pk})

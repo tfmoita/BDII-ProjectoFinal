@@ -30,6 +30,7 @@
     <div class="card-footer d-flex">  
         <a href="{% url 'pedido_comprafornecedor_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Pedidos</a>
         <div class="ml-auto">
+          <a href="{% url 'guia_remessafornecedor_create' %}" class="btn btn-primary btn-sm">Criar Guia de Remessa</a>
           <a type="button" class="btn btn-danger btn-sm" href="{% url 'pedido_comprafornecedor_delete' pk=pedido_compra_fornecedor.idpedidocomprafornecedor %}">Excluir</a>
         </div>
     </div>

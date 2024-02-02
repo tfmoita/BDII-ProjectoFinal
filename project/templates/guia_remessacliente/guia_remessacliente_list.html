@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Guias de Remessa para Cliente{% endblock %}
+
+{% block content %}
+  <h2>Lista de Guias de Remessa para Cliente</h2>
+  <ul>
+    {% for guia_remessa_cliente in guias_remessa_cliente %}
+      <li><a href="{% url 'guia_remessacliente_detail' pk=guia_remessa_cliente.idguiaremessacliente %}">Guia #{{ guia_remessa_cliente.datahoraguiacliente }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'guia_remessacliente_create' %}">Nova Guia</a>
+{% endblock %}

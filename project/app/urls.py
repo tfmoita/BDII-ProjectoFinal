@@ -47,5 +47,10 @@ urlpatterns = [
     path('guiaremessafornecedor/', views.guia_remessafornecedor_list, name='guia_remessafornecedor_list'),
     path('guiaremessafornecedor/<int:pk>/', views.guia_remessafornecedor_detail, name='guia_remessafornecedor_detail'),
     path('guiaremessafornecedor/create/', views.guia_remessafornecedor_create, name='guia_remessafornecedor_create'),
-    path('guiaremessafornecedor/<int:pk>/delete/', views.guia_remessafornecedor_delete, name='guia_remessafornecedor_delete')
+    path('guiaremessafornecedor/<int:pk>/delete/', views.guia_remessafornecedor_delete, name='guia_remessafornecedor_delete'),
+
+    path('guiaremessafcliente/', views.guia_remessacliente_list, name='guia_remessacliente_list'),
+    path('guiaremessafcliente/<int:pk>/', views.guia_remessacliente_detail, name='guia_remessacliente_detail'),
+    path('guiaremessafcliente/create/', views.guia_remessacliente_create, name='guia_remessacliente_create'),
+    path('guiaremessafcliente/<int:pk>/delete/', views.guia_remessacliente_delete, name='guia_remessacliente_delete')
 ]
