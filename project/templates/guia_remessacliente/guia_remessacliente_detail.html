@@ -9,6 +9,7 @@
         <h3>Informações da Guia de Remessa</h3>
     </div> 
     <div class="card-body">
+      <p><strong>ID da guia:</strong> {{ guia_remessa_cliente.idguiaremessacliente }}</p>
         <p><strong>Data e Hora da Guia:</strong> {{ guia_remessa_cliente.datahoraguiacliente }}</p>
 
         <p><strong>Pedido de Compra:</strong> <a href="{% url 'pedido_compracliente_detail' pk=guia_remessa_cliente.idpedidocompracliente %}">Ver Pedido de Compra</a></p>
@@ -29,6 +30,7 @@
     <div class="card-footer d-flex">  
         <a href="{% url 'guia_remessacliente_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Guias</a>
         <div class="ml-auto">
+          <a href="{% url 'faturacliente_create' %}" class="btn btn-primary btn-sm">Criar Fatura Cliente</a>
           <a type="button" class="btn btn-danger btn-sm" href="{% url 'guia_remessacliente_delete' pk=guia_remessa_cliente.idguiaremessacliente %}">Excluir</a>
         </div>
     </div>

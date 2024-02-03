@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Nova Fatura para Fornecedor{% endblock %}
+
+{% block content %}
+  <h2>{{ action }} Fatura para Fornecedor</h2>
+  
+  <form method="post" id="faturaFornecedorForm">
+    {% csrf_token %}
+    
+    {{ form_fatura.idguiaremessafornecedor|as_crispy_field }}
+    {{ form_fatura.preco|as_crispy_field }}
+
+    <input type="submit" value="Guardar">
+  </form>
+
+{% endblock %}

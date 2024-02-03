@@ -4,8 +4,8 @@ from django.db import transaction
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm
 from datetime import datetime
 
 from django.shortcuts import render, redirect
@@ -1061,3 +1061,200 @@ def guia_remessacliente_delete(request, pk):
             raise Http404("Erro ao processar a solicitação")
 
     return render(request, 'guia_remessacliente/guia_remessacliente_confirm_delete.html', {'idguiaremessacliente': pk})
+
+def faturacliente_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_faturacliente()')
+        columns = [col[0] for col in cursor.description]
+        faturas_cliente = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    print(faturas_cliente)  # Adicione este print para verificar os dados na console do servidor
+
+    return render(request, 'faturacliente/faturacliente_list.html', {'faturaclientes': faturas_cliente})
+
+
+def faturacliente_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_faturacliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  # Ajuste conforme necessário
+        row = cursor.fetchone()
+
+        if row:
+            fatura_cliente = {
+                'idguiaremessacliente': row[0],
+                'datahorafaturacliente': row[1],
+                'preco': row[2],
+                'idfaturacliente': pk
+                # Adicione outros campos conforme necessário
+            }
+
+            return render(request, 'faturacliente/faturacliente_detail.html',{'faturacliente': fatura_cliente})
+
+        raise Http404("Fatura do Cliente does not exist")
+    
+def faturacliente_create(request):
+    form_fatura = FaturaclienteForm()
+
+    if request.method == 'POST':
+        form_fatura = FaturaclienteForm(request.POST)
+
+        if form_fatura.is_valid():
+            with transaction.atomic():
+                # Criar a fatura para cliente
+                data_fatura = form_fatura.cleaned_data
+                idguiaremessacliente = data_fatura['idguiaremessacliente']
+
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_faturacliente_create(%s, %s, %s)", [
+                        idguiaremessacliente, data_fatura['datahorafaturacliente'], data_fatura['preco']
+                    ])
+
+            return redirect('faturacliente_list')  # Redirecionar para a lista de faturas
+
+    return render(request, 'faturacliente/faturacliente_form.html', {'form_fatura': form_fatura})
+
+
+
+def faturacliente_update(request, pk):
+    fatura = get_object_or_404(Faturacliente, pk=pk)
+
+    if request.method == 'POST':
+        form_fatura = FaturaclienteUpdateForm(request.POST)
+
+        if form_fatura.is_valid():
+            with transaction.atomic():
+                # Atualizar a fatura do cliente
+                data_fatura = form_fatura.cleaned_data
+                idguiaremessacliente = data_fatura.get('idguiaremessacliente', None)
+
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_faturacliente_update(%s, %s, %s, %s)", [
+                        fatura.pk, idguiaremessacliente, data_fatura['datahorafaturacliente'], data_fatura['preco']
+                    ])
+
+            return redirect('faturacliente_list')  # Redirecionar para a lista de faturas
+    else:
+        form_fatura = FaturaclienteUpdateForm(instance=fatura)
+
+    return render(request, 'faturacliente/faturacliente_form_update.html', {'form_fatura': form_fatura})
+
+
+
+    
+def faturacliente_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_faturacliente_read(%s, %s, %s, %s)", [pk, 0, None, 0])  # Ajuste conforme necessário
+            row = cursor.fetchone()
+
+            if row:
+                faturacliente = get_object_or_404(Faturacliente, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_faturacliente_delete(%s)", [pk])
+                    return redirect('faturacliente_list')
+                else:
+                    return render(request, 'faturacliente/faturacliente_confirm_delete.html', {'faturacliente': faturacliente})
+            else:
+                raise Http404("Fatura do Cliente does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+    
+def faturafornecedor_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_faturafornecedor()')
+        columns = [col[0] for col in cursor.description]
+        faturas_fornecedor = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    print(faturas_fornecedor)  # Adicione esta linha para imprimir os dados no console
+    
+    return render(request, 'faturafornecedor/faturafornecedor_list.html', {'faturafornecedores': faturas_fornecedor})
+
+
+def faturafornecedor_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_faturafornecedor_read(%s, %s, %s, %s)", [pk, 0, None, 0])  # Ajuste conforme necessário
+        row = cursor.fetchone()
+
+        if row:
+            fatura_fornecedor = {
+                'idguiaremessafornecedor': row[0],
+                'datahorafaturafornecedor': row[1],
+                'preco': row[2],
+                'idfaturafornecedor': pk
+                # Adicione outros campos conforme necessário
+            }
+            print(f"ID da Guia de Remessa do Fornecedor: {Faturafornecedor.idguiaremessafornecedor}")
+
+            return render(request, 'faturafornecedor/faturafornecedor_detail.html', {'faturafornecedor': fatura_fornecedor})
+
+        raise Http404("Fatura do Fornecedor does not exist")
+
+def faturafornecedor_create(request):
+    form_fatura = FaturafornecedorForm()
+
+    if request.method == 'POST':
+        form_fatura = FaturafornecedorForm(request.POST)
+
+        if form_fatura.is_valid():
+            print("Formulário válido. Tentando criar a fatura.")
+            with transaction.atomic():
+                # Criar a fatura para fornecedor
+                data_fatura = form_fatura.cleaned_data
+                idguiaremessafornecedor = data_fatura['idguiaremessafornecedor']
+
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_faturafornecedor_create(%s, %s, %s)", [
+                        idguiaremessafornecedor, data_fatura['datahorafaturafornecedor'], data_fatura['preco']
+                    ])
+
+            print("Fatura criada com sucesso. Redirecionando para faturafornecedor_list.")
+            return redirect('faturafornecedor_list')  # Redirecionar para a lista de faturas de fornecedor
+
+    return render(request, 'faturafornecedor/faturafornecedor_form.html', {'form_fatura': form_fatura})
+
+def faturafornecedor_update(request, pk):
+    fatura = get_object_or_404(Faturafornecedor, pk=pk)
+
+    if request.method == 'POST':
+        form_fatura = FaturafornecedorUpdateForm(request.POST, instance=fatura)
+
+        if form_fatura.is_valid():
+            with transaction.atomic():
+                # Atualizar a fatura do fornecedor
+                data_fatura = form_fatura.cleaned_data
+                idguiaremessafornecedor = data_fatura.get('idguiaremessafornecedor', None)
+
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_faturafornecedor_update(%s, %s, %s, %s)", [
+                        fatura.pk, idguiaremessafornecedor, data_fatura['datahorafaturafornecedor'], data_fatura['preco']
+                    ])
+
+            return redirect('faturafornecedor_list')  # Redirecionar para a lista de faturas de fornecedor
+    else:
+        form_fatura = FaturafornecedorUpdateForm(instance=fatura)
+
+    return render(request, 'faturafornecedor/faturafornecedor_form_update.html', {'form_fatura': form_fatura})
+
+def faturafornecedor_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            # Ajuste conforme necessário para a sua implementação
+            cursor.execute("CALL sp_faturafornecedor_read(%s, %s, %s, %s)", [pk, 0, None, 0])
+            row = cursor.fetchone()
+
+            if row:
+                faturafornecedor = get_object_or_404(Faturafornecedor, pk=pk)  # Certifique-se de importar o modelo correto
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_faturafornecedor_delete(%s)", [pk])
+                    return redirect('faturafornecedor_list')
+                else:
+                    return render(request, 'faturafornecedor/faturafornecedor_confirm_delete.html', {'faturafornecedor': faturafornecedor})
+            else:
+                raise Http404("Fatura do Fornecedor does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")

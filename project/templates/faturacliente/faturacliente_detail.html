@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Fatura do Cliente - {{ faturacliente.datahorafaturacliente }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>Fatura do Cliente - {{ faturacliente.datahorafaturacliente }}</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Guia de remessa:</strong> <a href="{% url 'guia_remessacliente_detail' pk=faturacliente.idguiaremessacliente %}">Ver Guia de remessa</a></p>
+      <p><strong>Preço:</strong> € {{ faturacliente.preco }}</p>
+      <!-- Adicione outros campos conforme necessário -->
+    </div>
+    <div class="card-footer d-flex">
+      <a href="{% url 'faturacliente_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Faturas do Cliente</a>
+  
+      <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'faturacliente_update' pk=faturacliente.idfaturacliente %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'faturacliente_delete' pk=faturacliente.idfaturacliente %}">Excluir</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

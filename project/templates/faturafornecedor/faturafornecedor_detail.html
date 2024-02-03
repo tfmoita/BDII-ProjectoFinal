@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Fatura do Fornecedor - {{ faturafornecedor.datahorafaturafornecedor }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>Fatura do Fornecedor - {{ faturafornecedor.datahorafaturafornecedor }}</h3>
+    </div>
+    <div class="card-body">
+        <p><strong>Guia de Remessa:</strong> <a href="{% url 'guia_remessafornecedor_detail' pk=faturafornecedor.idguiaremessafornecedor %}">Ver Guia de Remessa</a></p>
+      <p><strong>Preço:</strong> € {{ faturafornecedor.preco }}</p>
+      <!-- Adicione outros campos conforme necessário -->
+    </div>
+    <div class="card-footer d-flex">
+      <a href="{% url 'faturafornecedor_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Faturas do Fornecedor</a>
+  
+      <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'faturafornecedor_update' pk=faturafornecedor.idfaturafornecedor %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'faturafornecedor_delete' pk=faturafornecedor.idfaturafornecedor %}">Excluir</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

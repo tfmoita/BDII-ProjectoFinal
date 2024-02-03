@@ -52,5 +52,17 @@ urlpatterns = [
     path('guiaremessafcliente/', views.guia_remessacliente_list, name='guia_remessacliente_list'),
     path('guiaremessafcliente/<int:pk>/', views.guia_remessacliente_detail, name='guia_remessacliente_detail'),
     path('guiaremessafcliente/create/', views.guia_remessacliente_create, name='guia_remessacliente_create'),
-    path('guiaremessafcliente/<int:pk>/delete/', views.guia_remessacliente_delete, name='guia_remessacliente_delete')
+    path('guiaremessafcliente/<int:pk>/delete/', views.guia_remessacliente_delete, name='guia_remessacliente_delete'),
+
+    path('faturascliente/', views.faturacliente_list, name='faturacliente_list'),
+    path('faturacliente/<int:pk>/', views.faturacliente_detail, name='faturacliente_detail'),
+    path('faturacliente/create/', views.faturacliente_create, name='faturacliente_create'),
+    path('faturacliente/<int:pk>/update/', views.faturacliente_update, name='faturacliente_update'),
+    path('faturacliente/<int:pk>/delete/', views.faturacliente_delete, name='faturacliente_delete'),
+
+    path('faturasfornecedor/', views.faturafornecedor_list, name='faturafornecedor_list'),
+    path('faturafornecedor/<int:pk>/', views.faturafornecedor_detail, name='faturafornecedor_detail'),
+    path('faturafornecedor/create/', views.faturafornecedor_create, name='faturafornecedor_create'),
+    path('faturafornecedor/<int:pk>/update/', views.faturafornecedor_update, name='faturafornecedor_update'),
+    path('faturafornecedor/<int:pk>/delete/', views.faturafornecedor_delete, name='faturafornecedor_delete'),
 ]

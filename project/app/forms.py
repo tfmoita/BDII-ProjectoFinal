@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente
+from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente, Faturacliente
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.db import connection
@@ -76,22 +76,6 @@ class ComponenteForm(forms.ModelForm):
         fields = '__all__'
         labels = {
             'nomecomponente': 'Nome do Componente',
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Guardar'))
-
-class PedidoCompraFornecedorForm(forms.ModelForm):
-    class Meta:
-        model = PedidoComprafornecedor
-        fields = '__all__'
-        labels = {
-            'idfornecedor': 'Fornecedor',
-            'datahorapedidofornecedor': 'Data e Hora do Pedido',
-            'preco': 'Preço',
         }
 
     def __init__(self, *args, **kwargs):
@@ -323,3 +307,141 @@ class DetalhesGuiaremessaclienteForm(forms.Form):
 
 
         
+class FaturaclienteForm(forms.Form):
+    idguiaremessacliente = forms.ChoiceField(choices=[], label='ID da Guia de Remessa do Cliente')
+    datahorafaturacliente = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+    preco = forms.DecimalField(max_digits=10, decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        super(FaturaclienteForm, self).__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de guias de remessa do cliente usando SQL puro
+        guias_remessa_cliente_query = "SELECT idguiaremessacliente FROM guia_remessacliente"
+        with connection.cursor() as cursor:
+            cursor.execute(guias_remessa_cliente_query)
+            guias_remessa_cliente = cursor.fetchall()
+
+        # Criar lista de tuplas (idguiaremessacliente, idguiaremessacliente) para usar como choices
+        guias_remessa_cliente_choices = [(guia[0], guia[0]) for guia in guias_remessa_cliente]
+
+        # Atualizar as escolhas do campo idguiaremessacliente
+        self.fields['idguiaremessacliente'].choices = guias_remessa_cliente_choices
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorafaturacliente = cleaned_data.get('datahorafaturacliente')
+
+        if datahorafaturacliente:
+            cleaned_data['datahorafaturacliente'] = datahorafaturacliente.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorafaturacliente'] = None
+
+        return cleaned_data
+        
+
+class FaturaclienteUpdateForm(forms.Form):
+    idguiaremessacliente = forms.ChoiceField(choices=[], label='ID da Guia de Remessa do Cliente')
+    datahorafaturacliente = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+    preco = forms.DecimalField(max_digits=10, decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.pop('instance', None)
+        super(FaturaclienteUpdateForm, self).__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de guias de remessa do cliente usando SQL puro
+        guias_remessa_cliente_query = "SELECT idguiaremessacliente FROM guia_remessacliente"
+        with connection.cursor() as cursor:
+            cursor.execute(guias_remessa_cliente_query)
+            guias_remessa_cliente = cursor.fetchall()
+
+        # Criar lista de tuplas (idguiaremessacliente, idguiaremessacliente) para usar como choices
+        guias_remessa_cliente_choices = [(guia[0], guia[0]) for guia in guias_remessa_cliente]
+
+        # Atualizar as escolhas do campo idguiaremessacliente
+        self.fields['idguiaremessacliente'].choices = guias_remessa_cliente_choices
+
+        # Se uma instância for fornecida, popule os campos do formulário com os dados da instância
+        if instance:
+            self.fields['idguiaremessacliente'].initial = instance.idguiaremessacliente
+            self.fields['datahorafaturacliente'].initial = instance.datahorafaturacliente
+            self.fields['preco'].initial = instance.preco
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorafaturacliente = cleaned_data.get('datahorafaturacliente')
+
+        if datahorafaturacliente:
+            cleaned_data['datahorafaturacliente'] = datahorafaturacliente.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorafaturacliente'] = None
+
+        return cleaned_data
+
+class FaturafornecedorForm(forms.Form):
+    idguiaremessafornecedor = forms.ChoiceField(choices=[], label='ID da Guia de Remessa do Fornecedor')
+    datahorafaturafornecedor = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+    preco = forms.DecimalField(max_digits=10, decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        super(FaturafornecedorForm, self).__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de guias de remessa do fornecedor usando SQL puro
+        guias_remessa_fornecedor_query = "SELECT idguiaremessafornecedor FROM guia_remessafornecedor"
+        with connection.cursor() as cursor:
+            cursor.execute(guias_remessa_fornecedor_query)
+            guias_remessa_fornecedor = cursor.fetchall()
+
+        # Criar lista de tuplas (idguiaremessafornecedor, idguiaremessafornecedor) para usar como choices
+        guias_remessa_fornecedor_choices = [(guia[0], guia[0]) for guia in guias_remessa_fornecedor]
+
+        # Atualizar as escolhas do campo idguiaremessacliente
+        self.fields['idguiaremessafornecedor'].choices = guias_remessa_fornecedor_choices
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorafaturafornecedor = cleaned_data.get('datahorafaturafornecedor')
+
+        if datahorafaturafornecedor:
+            cleaned_data['datahorafaturafornecedor'] = datahorafaturafornecedor.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorafaturafornecedor'] = None
+
+        return cleaned_data
+    
+class FaturafornecedorUpdateForm(forms.Form):
+    idguiaremessafornecedor = forms.ChoiceField(choices=[], label='ID da Guia de Remessa do Fornecedor')
+    datahorafaturafornecedor = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}), required=False)
+    preco = forms.DecimalField(max_digits=10, decimal_places=2)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.pop('instance', None)
+        super(FaturafornecedorUpdateForm, self).__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de guias de remessa do fornecedor usando SQL puro
+        guias_remessa_fornecedor_query = "SELECT idguiaremessafornecedor FROM guia_remessafornecedor"
+        with connection.cursor() as cursor:
+            cursor.execute(guias_remessa_fornecedor_query)
+            guias_remessa_fornecedor = cursor.fetchall()
+
+        # Criar lista de tuplas (idguiaremessafornecedor, idguiaremessafornecedor) para usar como choices
+        guias_remessa_fornecedor_choices = [(guia[0], guia[0]) for guia in guias_remessa_fornecedor]
+
+        # Atualizar as escolhas do campo idguiaremessafornecedor
+        self.fields['idguiaremessafornecedor'].choices = guias_remessa_fornecedor_choices
+
+        # Se uma instância for fornecida, popule os campos do formulário com os dados da instância
+        if instance:
+            self.fields['idguiaremessafornecedor'].initial = instance.idguiaremessafornecedor
+            self.fields['datahorafaturafornecedor'].initial = instance.datahorafaturafornecedor
+            self.fields['preco'].initial = instance.preco
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorafaturafornecedor = cleaned_data.get('datahorafaturafornecedor')
+
+        if datahorafaturafornecedor:
+            cleaned_data['datahorafaturafornecedor'] = datahorafaturafornecedor.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorafaturafornecedor'] = None
+
+        return cleaned_data

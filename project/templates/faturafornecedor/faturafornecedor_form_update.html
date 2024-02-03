@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Atualizar Fatura do Fornecedor{% endblock %}
+
+{% block content %}
+  <h2>Atualizar Fatura do Fornecedor</h2>
+  
+  <form method="post" id="faturaForm">
+    {% csrf_token %}
+    {{ form_fatura.idguiaremessafornecedor|as_crispy_field }}
+    {{ form_fatura.preco|as_crispy_field }}
+
+    <input type="submit" value="Atualizar">
+  </form>
+
+{% endblock %}

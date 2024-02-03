@@ -9,6 +9,7 @@
         <h3>Informações da Guia de Remessa</h3>
     </div> 
     <div class="card-body">
+      <p><strong>ID da guia:</strong> {{ guia_remessa_fornecedor.idguiaremessafornecedor }}</p>
         <p><strong>Data e Hora da Guia:</strong> {{ guia_remessa_fornecedor.datahoraguiafornecedor }}</p>
 
         <p><strong>Pedido de Compra:</strong> <a href="{% url 'pedido_comprafornecedor_detail' pk=guia_remessa_fornecedor.idpedidocomprafornecedor %}">Ver Pedido de Compra</a></p>

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Faturas dos Fornecedores</h2>
+  <ul>
+    {% for faturafornecedor in faturafornecedores %}
+      <li><a href="{% url 'faturafornecedor_detail' pk=faturafornecedor.idfaturafornecedor %}">{{ faturafornecedor.datahorafaturafornecedor }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'faturafornecedor_create' %}">Nova Fatura do Fornecedor</a>
+{% endblock %}

@@ -105,7 +105,7 @@ class Equipamento(models.Model):
 
 class Faturacliente(models.Model):
     idfaturacliente = models.AutoField(primary_key=True)
-    idguiaremessacliente = models.ForeignKey('GuiaRemessafornecedor', models.DO_NOTHING, db_column='idguiaremessacliente')
+    idguiaremessacliente = models.ForeignKey('GuiaRemessacliente', models.DO_NOTHING, db_column='idguiaremessacliente')
     datahorafaturacliente = models.DateTimeField()
     preco = models.DecimalField(max_digits=10, decimal_places=2)
 
