@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente, Faturacliente
+from .models import Fornecedor, Cliente, Equipamento, PedidoComprafornecedor, Componente, PedidoCompracliente, FolhaDeObra, TrabalhadorOperario, Armazem, DetalhesPedidocompracliente, Faturacliente, TrabalhadorOperario, MaoDeObra
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from django.db import connection
@@ -528,3 +528,43 @@ class Detalhes_ficha_de_obraForm(forms.Form):
 
         return cleaned_data
     
+class TrabalhadorOperarioForm(forms.ModelForm):
+    class Meta:
+        model = TrabalhadorOperario
+        fields = '__all__'
+        labels = {
+            'nome': 'Nome',
+            'email': 'Email',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = 'post'
+        self.helper.add_input(Submit('submit', 'Guardar'))
+
+
+class MaoDeObraForm(forms.ModelForm):
+    class Meta:
+        model = MaoDeObra
+        fields = '__all__'
+        labels = {
+            'idtrabalhadoroperario': 'ID do Trabalhador Operário',
+            'tipodemaodeobra': 'Tipo de Mão de Obra',
+            'custo_hora': 'Custo por Hora',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(MaoDeObraForm, self).__init__(*args, **kwargs)
+
+        # Lógica para obter a lista de trabalhadores operários usando SQL puro
+        trabalhadores_operarios_query = "SELECT idtrabalhadoroperario, nome FROM trabalhador_operario"
+        with connection.cursor() as cursor:
+            cursor.execute(trabalhadores_operarios_query)
+            trabalhadores_operarios = cursor.fetchall()
+
+        # Criar lista de tuplas (idtrabalhadoroperario, nome) para usar como choices
+        trabalhadores_operarios_choices = [(trabalhador[0], trabalhador[1]) for trabalhador in trabalhadores_operarios]
+
+        # Atualizar as escolhas do campo idtrabalhadoroperario
+        self.fields['idtrabalhadoroperario'].choices = trabalhadores_operarios_choices

@@ -10,6 +10,8 @@
     </div> 
     <div class="card-body">
       <p><strong>ID da Folha de Obra:</strong> {{ folha_de_obra.idfolhadeobra }}</p>
+      <p><strong>Pedido de Compra:</strong> <a href="{% url 'equipamento_detail' pk=folha_de_obra.idequipamento %}">Ver Equipamento</a></p>
+      <p><strong>Pedido de Compra:</strong> <a href="{% url 'mao_de_obra_detail' pk=folha_de_obra.idmaodeobra %}">Ver Mão de Obra</a></p>
       <p><strong>Data e Hora de Início:</strong> {{ folha_de_obra.datahorainicio }}</p>
       <p><strong>Data e Hora de Fim:</strong> {{ folha_de_obra.datahorafim }}</p>
       <p><strong>Preço Médio:</strong> {{ folha_de_obra.precomedio }}</p>
@@ -34,7 +36,7 @@
     <div class="card-footer d-flex">  
       <a href="{% url 'folha_de_obra_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Folhas de Obra</a>
       <div class="ml-auto">
-        <!-- Adicione links ou botões adicionais conforme necessário -->
+        <a type="button" class="btn btn-danger btn-sm" href="{% url 'folha_de_obra_delete' pk=folha_de_obra.idfolhadeobra %}">Excluir</a>
       </div>
     </div>
   </div>

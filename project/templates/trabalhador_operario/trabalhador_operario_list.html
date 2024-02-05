@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Trabalhadores Operários</h2>
+  <ul>
+    {% for trabalhador_operario in trabalhadores_operarios %}
+      <li><a href="{% url 'trabalhador_operario_detail' pk=trabalhador_operario.idtrabalhadoroperario %}">{{ trabalhador_operario.nome }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'trabalhador_operario_create' %}">Novo Trabalhador Operário</a>
+{% endblock %}

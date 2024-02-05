@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Mão de Obra</h2>
+  <ul>
+    {% for mao_de_obra in maos_de_obra %}
+      <li><a href="{% url 'mao_de_obra_detail' pk=mao_de_obra.idmaodeobra %}">{{ mao_de_obra.tipodemaodeobra }}</a></li>
+    {% endfor %}
+  </ul>
+  <a type="button" class="btn btn-dark" href="{% url 'mao_de_obra_create' %}">Nova Mão de Obra</a>
+{% endblock %}

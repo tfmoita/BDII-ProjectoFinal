@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Mão de Obra - {{ mao_de_obra.tipodemaodeobra }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>Mão de Obra - {{ mao_de_obra.tipodemaodeobra }}</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>ID Trabalhador Operário:</strong> {{ mao_de_obra.idtrabalhadoroperario }}</p>
+      <p><strong>Nome do Trabalhador Operário:</strong> {{ mao_de_obra.nome }}</p>
+      <p><strong>Custo por Hora:</strong> € {{ mao_de_obra.custo_hora }}</p>
+      <!-- Adicione outros campos conforme necessário -->
+    </div>
+    <div class="card-footer d-flex">
+      <a href="{% url 'mao_de_obra_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Mão de Obra</a>
+  
+      <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'mao_de_obra_update' pk=mao_de_obra.idmaodeobra %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'mao_de_obra_delete' pk=mao_de_obra.idmaodeobra %}">Excluir</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

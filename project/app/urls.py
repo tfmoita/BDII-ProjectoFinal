@@ -70,4 +70,16 @@ urlpatterns = [
     path('folhadeobra/<int:pk>/', views.folha_de_obra_detail, name='folha_de_obra_detail'),
     path('folhadeobra/create/', views.folha_de_obra_create, name='folha_de_obra_create'),
     path('folhadeobra/<int:pk>/delete/', views.folha_de_obra_delete, name='folha_de_obra_delete'),
+
+    path('trabalhadores_operarios/', views.trabalhador_operario_list, name='trabalhador_operario_list'),
+    path('trabalhador_operario/<int:pk>/', views.trabalhador_operario_detail, name='trabalhador_operario_detail'),
+    path('trabalhador_operario/create/', views.trabalhador_operario_create, name='trabalhador_operario_create'),
+    path('trabalhador_operario/<int:pk>/update/', views.trabalhador_operario_update, name='trabalhador_operario_update'),
+    path('trabalhador_operario/<int:pk>/delete/', views.trabalhador_operario_delete, name='trabalhador_operario_delete'),
+
+    path('mao_de_obra/', views.mao_de_obra_list, name='mao_de_obra_list'),
+    path('mao_de_obra/<int:pk>/', views.mao_de_obra_detail, name='mao_de_obra_detail'),
+    path('mao_de_obra/create/', views.mao_de_obra_create, name='mao_de_obra_create'),
+    path('mao_de_obra/<int:pk>/update/', views.mao_de_obra_update, name='mao_de_obra_update'),
+    path('mao_de_obra/<int:pk>/delete/', views.mao_de_obra_delete, name='mao_de_obra_delete'),
 ]

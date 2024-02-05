@@ -1,0 +1,12 @@
+<!-- trabalhador_operario_confirm_delete.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Confirmar Exclusão</h2>
+  <p>Tem a certeza que deseja excluir o trabalhador operário "{{ trabalhador_operario.nome }}"?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
+    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'trabalhador_operario_list' %}">Cancelar</a>
+  </form>
+{% endblock %}

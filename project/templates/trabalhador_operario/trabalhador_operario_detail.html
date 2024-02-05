@@ -1,0 +1,24 @@
+<!-- trabalhador_operario_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Informações do Trabalhador Operário - {{ trabalhador_operario.nome }}{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>{{ trabalhador_operario.nome }}</h3>
+    </div>
+    <div class="card-body">
+      <p><strong>Email:</strong> {{ trabalhador_operario.email }}</p>
+      <!-- Adicione outros campos conforme necessário -->
+    </div>
+    <div class="card-footer d-flex">
+      <a href="{% url 'trabalhador_operario_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Trabalhadores Operários</a>
+  
+      <div class="ml-auto">
+          <a type="button" class="btn btn-warning btn-sm" href="{% url 'trabalhador_operario_update' pk=trabalhador_operario.idtrabalhadoroperario %}">Editar</a>
+          <a type="button" class="btn btn-danger btn-sm" href="{% url 'trabalhador_operario_delete' pk=trabalhador_operario.idtrabalhadoroperario %}">Excluir</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

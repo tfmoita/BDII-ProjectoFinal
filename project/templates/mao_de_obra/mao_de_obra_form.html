@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Nova Mão de Obra{% endblock %}
+
+{% block content %}
+  <h2>{{ action }} Mão de Obra</h2>
+  
+  <form method="post" id="maoDeObraForm">
+    {% csrf_token %}
+    
+    {{ form_mao_de_obra.idtrabalhadoroperario|as_crispy_field }}
+    {{ form_mao_de_obra.tipodemaodeobra|as_crispy_field }}
+    {{ form_mao_de_obra.custo_hora|as_crispy_field }}
+
+    <input type="submit" value="Guardar">
+  </form>
+
+{% endblock %}

@@ -176,7 +176,6 @@ class MaoDeObra(models.Model):
     idtrabalhadoroperario = models.ForeignKey('TrabalhadorOperario', models.DO_NOTHING, db_column='idtrabalhadoroperario')
     tipodemaodeobra = models.CharField(max_length=255)
     custo_hora = models.DecimalField(max_digits=10, decimal_places=2)
-    datahoramaodeobra = models.DateTimeField()
 
     class Meta:
         managed = False

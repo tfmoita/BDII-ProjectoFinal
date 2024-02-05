@@ -4,8 +4,8 @@ from django.db import transaction
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
-from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm
+from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor, TrabalhadorOperario, MaoDeObra
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm, TrabalhadorOperarioForm, MaoDeObraForm
 from datetime import datetime
 
 from django.shortcuts import render, redirect
@@ -1062,6 +1062,8 @@ def guia_remessacliente_delete(request, pk):
 
     return render(request, 'guia_remessacliente/guia_remessacliente_confirm_delete.html', {'idguiaremessacliente': pk})
 
+#views das  faturas dos clientes
+
 def faturacliente_list(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM fn_listar_faturacliente()')
@@ -1161,6 +1163,8 @@ def faturacliente_delete(request, pk):
         print(e)
         raise Http404("Erro ao processar a solicitação")
     
+#views fatura fornecedor
+
 def faturafornecedor_list(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM fn_listar_faturafornecedor()')
@@ -1364,7 +1368,7 @@ def folha_de_obra_delete(request, pk):
             with transaction.atomic():
                 # Chame o procedimento armazenado para deletar os detalhes da folha de obra
                 with connection.cursor() as cursor:
-                    cursor.execute("CALL sp_detalhes_ficha_de_obra_delete(%s)", [pk])
+                    cursor.execute("CALL sp_detalhes_folha_de_obra_delete(%s)", [pk])
 
                 # Chame o procedimento armazenado para deletar a folha de obra
                 with connection.cursor() as cursor:
@@ -1377,3 +1381,196 @@ def folha_de_obra_delete(request, pk):
             raise Http404("Erro ao processar a solicitação")
 
     return render(request, 'folha_de_obra/folha_de_obra_confirm_delete.html', {'idfolhadeobra': pk})
+
+#views trabalhador operario
+
+def trabalhador_operario_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_trabalhador_operario()')
+        columns = [col[0] for col in cursor.description]
+        trabalhadores_operarios = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'trabalhador_operario/trabalhador_operario_list.html', {'trabalhadores_operarios': trabalhadores_operarios})
+
+def trabalhador_operario_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_trabalhador_operario_read(%s, %s, %s)", [pk, '', ''])  # Ajuste conforme necessário
+        row = cursor.fetchone()
+
+        if row:
+            trabalhador_operario = {
+                'nome': row[0],
+                'email': row[1],
+                'idtrabalhadoroperario': pk
+                # Adicione outros campos conforme necessário
+            }
+            return render(request, 'trabalhador_operario/trabalhador_operario_detail.html', {'trabalhador_operario': trabalhador_operario})
+
+        raise Http404("Trabalhador Operário does not exist")
+    
+def trabalhador_operario_create(request):
+    form = TrabalhadorOperarioForm()
+
+    if request.method == 'POST':
+        form = TrabalhadorOperarioForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            with connection.cursor() as cursor:
+                cursor.execute("CALL sp_trabalhador_operario_create(%s, %s)", [data['nome'], data['email']])
+            return redirect('trabalhador_operario_list')
+
+    return render(request, 'trabalhador_operario/trabalhador_operario_form.html', {'form': form})
+
+def trabalhador_operario_update(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_trabalhador_operario_read(%s, %s, %s)", [pk, '', ''])  # Ajuste conforme necessário
+            row = cursor.fetchone()
+
+            if row:
+                trabalhador_operario_data = {
+                    'nome': row[0],
+                    'email': row[1],
+                    # Adicione outros campos conforme necessário
+                }
+                form = TrabalhadorOperarioForm(initial=trabalhador_operario_data)
+
+                if request.method == 'POST':
+                    form = TrabalhadorOperarioForm(request.POST)
+                    if form.is_valid():
+                        data = form.cleaned_data
+                        
+                        # Execute este procedimento para verificar a passagem de valores
+                        with connection.cursor() as cursor:
+                            cursor.execute("CALL sp_trabalhador_operario_update(%s, %s, %s)", [pk, data['nome'], data['email']])
+                        return redirect('trabalhador_operario_list')
+                else:
+                    return render(request, 'trabalhador_operario/trabalhador_operario_form.html', {'form': form, 'action': 'Atualizar'})
+            else:
+                raise Http404("Trabalhador Operário does not exist")
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+    
+def trabalhador_operario_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_trabalhador_operario_read(%s, %s, %s)", [pk, '', ''])  # Ajuste conforme necessário
+            row = cursor.fetchone()
+
+            if row:
+                trabalhador_operario = get_object_or_404(TrabalhadorOperario, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_trabalhador_operario_delete(%s)", [pk])
+                    return redirect('trabalhador_operario_list')
+                else:
+                    return render(request, 'trabalhador_operario/trabalhador_operario_confirm_delete.html', {'trabalhador_operario': trabalhador_operario})
+            else:
+                raise Http404("Trabalhador Operário does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
+    
+#views mao de obra
+    
+def mao_de_obra_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_mao_de_obra()')
+        columns = [col[0] for col in cursor.description]
+        maos_de_obra = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    print(maos_de_obra)
+    return render(request, 'mao_de_obra/mao_de_obra_list.html', {'maos_de_obra': maos_de_obra})
+
+def mao_de_obra_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_mao_de_obra_read(%s, %s, %s, %s)", [pk, 0, '', 0])
+        row = cursor.fetchone()
+
+        idtrabalhadoroperario = row[0]
+        cursor.execute("SELECT nome FROM trabalhador_operario WHERE idtrabalhadoroperario = %s", [idtrabalhadoroperario])
+        nome = cursor.fetchone()[0]  # Recupera o nome do cliente
+
+
+        if row:
+            mao_de_obra = {
+                'idtrabalhadoroperario': row[0],
+                'nome': nome,
+                'tipodemaodeobra': row[1],
+                'custo_hora': row[2],
+                'idmaodeobra': pk
+                # Adicione outros campos conforme necessário
+            }
+
+            return render(request, 'mao_de_obra/mao_de_obra_detail.html', {'mao_de_obra': mao_de_obra})
+
+        raise Http404("Mão de Obra does not exist")
+
+def mao_de_obra_create(request):
+    form_mao_de_obra = MaoDeObraForm()
+
+    if request.method == 'POST':
+        form_mao_de_obra = MaoDeObraForm(request.POST)
+
+        if form_mao_de_obra.is_valid():
+            with transaction.atomic():
+                # Criar a mão de obra
+                data_mao_de_obra = form_mao_de_obra.cleaned_data
+                idtrabalhadoroperario = data_mao_de_obra['idtrabalhadoroperario'].idtrabalhadoroperario
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_mao_de_obra_create(%s, %s, %s)", [
+                        idtrabalhadoroperario,  # Ajuste aqui
+                        data_mao_de_obra['tipodemaodeobra'],
+                        data_mao_de_obra['custo_hora']
+                    ])
+
+            return redirect('mao_de_obra_list')  # Redirecionar para a lista de mão de obra
+
+    return render(request, 'mao_de_obra/mao_de_obra_form.html', {'form_mao_de_obra': form_mao_de_obra})
+
+def mao_de_obra_update(request, pk):
+    mao_de_obra = get_object_or_404(MaoDeObra, pk=pk)
+
+    if request.method == 'POST':
+        form_mao_de_obra = MaoDeObraForm(request.POST, instance=mao_de_obra)
+
+        if form_mao_de_obra.is_valid():
+            with transaction.atomic():
+                # Atualizar a mão de obra
+                data_mao_de_obra = form_mao_de_obra.cleaned_data
+                idtrabalhadoroperario = data_mao_de_obra['idtrabalhadoroperario'].idtrabalhadoroperario
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_mao_de_obra_update(%s, %s, %s, %s)", [
+                        mao_de_obra.pk, idtrabalhadoroperario, data_mao_de_obra['tipodemaodeobra'],
+                        data_mao_de_obra['custo_hora']
+                    ])
+
+            return redirect('mao_de_obra_list')  # Redirecionar para a lista de mão de obra
+    else:
+        form_mao_de_obra = MaoDeObraForm(instance=mao_de_obra)
+
+    return render(request, 'mao_de_obra/mao_de_obra_form_update.html', {'form_mao_de_obra': form_mao_de_obra})
+
+def mao_de_obra_delete(request, pk):
+    try:
+        with connection.cursor() as cursor:
+            # Ajuste conforme necessário
+            cursor.execute("CALL sp_mao_de_obra_read(%s, %s, %s, %s)", [pk, 0, '', 0])
+            row = cursor.fetchone()
+
+            if row:
+                mao_de_obra = get_object_or_404(MaoDeObra, pk=pk)
+                if request.method == 'POST':
+                    with connection.cursor() as delete_cursor:
+                        delete_cursor.execute("CALL sp_mao_de_obra_delete(%s)", [pk])
+                    return redirect('mao_de_obra_list')
+                else:
+                    return render(request, 'mao_de_obra/mao_de_obra_confirm_delete.html', {'mao_de_obra': mao_de_obra})
+            else:
+                raise Http404("Mão de Obra does not exist")
+
+    except Exception as e:
+        print(e)
+        raise Http404("Erro ao processar a solicitação")
