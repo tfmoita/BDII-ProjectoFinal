@@ -65,4 +65,9 @@ urlpatterns = [
     path('faturafornecedor/create/', views.faturafornecedor_create, name='faturafornecedor_create'),
     path('faturafornecedor/<int:pk>/update/', views.faturafornecedor_update, name='faturafornecedor_update'),
     path('faturafornecedor/<int:pk>/delete/', views.faturafornecedor_delete, name='faturafornecedor_delete'),
+
+    path('folhadeobra/', views.folha_de_obra_list, name='folha_de_obra_list'),
+    path('folhadeobra/<int:pk>/', views.folha_de_obra_detail, name='folha_de_obra_detail'),
+    path('folhadeobra/create/', views.folha_de_obra_create, name='folha_de_obra_create'),
+    path('folhadeobra/<int:pk>/delete/', views.folha_de_obra_delete, name='folha_de_obra_delete'),
 ]

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Confirmar Exclusão</h2>
+  <p>Tem a certeza que deseja excluir a Folha de Obra?</p>
+  <form method="post" action="{% url 'folha_de_obra_delete' pk=idfolhadeobra %}">
+    {% csrf_token %}
+    <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
+    <a type="button" class="btn btn-secondary btn-sm" href="{% url 'folha_de_obra_list' %}">Cancelar</a>
+  </form>
+{% endblock %}

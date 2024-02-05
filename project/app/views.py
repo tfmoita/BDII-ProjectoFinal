@@ -5,7 +5,7 @@ from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm
 from datetime import datetime
 
 from django.shortcuts import render, redirect
@@ -1258,3 +1258,122 @@ def faturafornecedor_delete(request, pk):
     except Exception as e:
         print(e)
         raise Http404("Erro ao processar a solicitação")
+    
+#folha de obra views
+
+def folha_de_obra_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM fn_listar_folha_de_obra()')
+        columns = [col[0] for col in cursor.description]
+        folhas_de_obra = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'folha_de_obra/folha_de_obra_list.html', {'folhas_de_obra': folhas_de_obra})
+
+def folha_de_obra_detail(request, pk):
+    with connection.cursor() as cursor:
+        cursor.execute("CALL sp_folha_de_obra_read(%s, %s, %s, %s, %s, %s, %s)", [pk, 0, 0, None, None, 0, 0])  
+        row = cursor.fetchone()
+
+        if row:
+            idmaodeobra = row[0]
+            idequipamento = row[1]
+            idarmazem = row[4]
+
+            cursor.execute("SELECT tipodemaodeobra FROM mao_de_obra WHERE idmaodeobra = %s", [idmaodeobra])
+            tipodemaodeobra = cursor.fetchone()[0]  # Recupera o nome da mão de obra
+
+            cursor.execute("SELECT nomeequipamento FROM equipamento WHERE idequipamento = %s", [idequipamento])
+            nomeequipamento = cursor.fetchone()[0]  # Recupera o nome do equipamento
+
+            cursor.execute("SELECT codigopostal FROM armazem WHERE idarmazem = %s", [idarmazem])
+            codigopostal = cursor.fetchone()[0]  # Recupera o código postal do armazém
+
+            # Recuperar detalhes da folha de obra, incluindo informações do armazém
+            cursor.execute("SELECT idcomponente, quantidade, idarmazem, datahoradetalhesfolhadeobra FROM detalhes_folha_de_obra WHERE idfolhadeobra = %s", [pk])
+            detalhes_folha_de_obra = cursor.fetchall()
+
+
+            folha_de_obra = {
+                'idmaodeobra': idmaodeobra,
+                'nomemaodeobra': tipodemaodeobra,
+                'idequipamento': idequipamento,
+                'nomeequipamento': nomeequipamento,
+                'datahorainicio': row[2],
+                'datahorafim': row[3],
+                'idarmazem': idarmazem,
+                'codigopostal': codigopostal,
+                'precomedio': row[5],
+                'idfolhadeobra': pk,
+                'detalhes_folha_de_obra': detalhes_folha_de_obra
+            }
+            
+            print(f"Folha de Obra: {folha_de_obra}")
+
+            return render(request, 'folha_de_obra/folha_de_obra_detail.html', {'folha_de_obra': folha_de_obra})
+
+        raise Http404("Folha de Obra does not exist")
+    
+def folha_de_obra_create(request):
+    form_folha_obra = Folha_de_obraForm()
+    form_detalhes = Detalhes_ficha_de_obraForm()
+
+    if request.method == 'POST':
+        form_folha_obra = Folha_de_obraForm(request.POST)
+        form_detalhes = Detalhes_ficha_de_obraForm(request.POST)
+
+        if form_folha_obra.is_valid() and form_detalhes.is_valid():
+            with transaction.atomic():
+                # Criar a folha de obra
+                data_folha_obra = form_folha_obra.cleaned_data
+
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_folha_de_obra_create(%s, %s, %s, %s, %s, %s)", [
+                        data_folha_obra['idmaodeobra'], data_folha_obra['idequipamento'],
+                        data_folha_obra['datahorainicio'], data_folha_obra['datahorafim'],
+                        data_folha_obra['idarmazem'], data_folha_obra['precomedio']
+                    ])
+
+                # Obter o ID da folha de obra recém-criada
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT currval('folha_de_obra_idfolhadeobra_seq')")
+                    id_folha_obra = cursor.fetchone()[0]
+
+                # Criar detalhes para a folha de obra (suportando múltiplos detalhes)
+                idcomponentes = request.POST.getlist('idcomponente')
+                idarmazens = request.POST.getlist('idarmazem')
+                quantidades = request.POST.getlist('quantidade')
+                datahora = request.POST.getlist('datahoradetalhesfolhadeobra')
+
+                for idcomponente, idarmazem, quantidade, datahoradetalhesfolhadeobra in zip(idcomponentes, idarmazens, quantidades, datahora):
+                    # Adiciona instruções de impressão
+                    print(f"idcomponente: {idcomponente}, idarmazem: {idarmazem}, quantidade: {quantidade}, data: {datahoradetalhesfolhadeobra}")
+
+
+                    with connection.cursor() as cursor:
+                        cursor.execute("CALL sp_detalhes_folha_de_obra_create(%s, %s, %s, %s, %s)", [
+                            id_folha_obra, idcomponente, quantidade, idarmazem, datahoradetalhesfolhadeobra
+                        ])
+
+            return redirect('folha_de_obra_list')  # Redirecionar para a lista de folhas de obra
+
+    return render(request, 'folha_de_obra/folha_de_obra_form.html', {'form_folha_obra': form_folha_obra, 'form_detalhes': form_detalhes})
+
+def folha_de_obra_delete(request, pk):
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                # Chame o procedimento armazenado para deletar os detalhes da folha de obra
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_detalhes_ficha_de_obra_delete(%s)", [pk])
+
+                # Chame o procedimento armazenado para deletar a folha de obra
+                with connection.cursor() as cursor:
+                    cursor.execute("CALL sp_folha_de_obra_delete(%s)", [pk])
+
+                return redirect('folha_de_obra_list')
+
+        except Exception as e:
+            print(f"Erro ao processar a solicitação: {e}")
+            raise Http404("Erro ao processar a solicitação")
+
+    return render(request, 'folha_de_obra/folha_de_obra_confirm_delete.html', {'idfolhadeobra': pk})

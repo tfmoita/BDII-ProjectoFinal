@@ -129,7 +129,6 @@ class FolhaDeObra(models.Model):
     idfolhadeobra = models.AutoField(primary_key=True)
     idmaodeobra = models.ForeignKey('MaoDeObra', models.DO_NOTHING, db_column='idmaodeobra')
     idequipamento = models.ForeignKey(Equipamento, models.DO_NOTHING, db_column='idequipamento')
-    quantidadeequipamento = models.IntegerField()
     datahorainicio = models.DateTimeField()
     datahorafim = models.DateTimeField()
     idarmazem = models.ForeignKey(Armazem, models.DO_NOTHING, db_column='idarmazem')
@@ -178,7 +177,6 @@ class MaoDeObra(models.Model):
     tipodemaodeobra = models.CharField(max_length=255)
     custo_hora = models.DecimalField(max_digits=10, decimal_places=2)
     datahoramaodeobra = models.DateTimeField()
-    idequipamento = models.ForeignKey(Equipamento, models.DO_NOTHING, db_column='idequipamento')
 
     class Meta:
         managed = False
@@ -212,7 +210,6 @@ class PedidoComprafornecedor(models.Model):
 class TrabalhadorOperario(models.Model):
     idtrabalhadoroperario = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=255)
-    datacontratacao = models.DateField()
     email = models.CharField(max_length=30)
 
     class Meta:

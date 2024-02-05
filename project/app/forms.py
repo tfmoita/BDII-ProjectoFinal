@@ -445,3 +445,86 @@ class FaturafornecedorUpdateForm(forms.Form):
             cleaned_data['datahorafaturafornecedor'] = None
 
         return cleaned_data
+
+
+class Folha_de_obraForm(forms.Form):
+    # Lógica para obter a lista de maos de obra usando SQL puro
+    maos_de_obra_query = "SELECT idmaodeobra FROM mao_de_obra"
+    with connection.cursor() as cursor:
+        cursor.execute(maos_de_obra_query)
+        maos_de_obra = cursor.fetchall()  # Substitua pela sua consulta SQL
+    # Lógica para obter a lista de equipamentos usando SQL puro
+    equipamentos_query = "SELECT idequipamento FROM equipamento"
+    with connection.cursor() as cursor:
+        cursor.execute(equipamentos_query)
+        equipamentos = cursor.fetchall()  # Substitua pela sua consulta SQL
+    # Lógica para obter a lista de armazens usando SQL puro
+    armazens_query = "SELECT idarmazem FROM armazem"
+    with connection.cursor() as cursor:
+        cursor.execute(armazens_query)
+        armazens = cursor.fetchall()  # Substitua pela sua consulta SQL
+
+    # Substitua essas variáveis pelos resultados das consultas SQL
+    maos_de_obra_choices = [(mao_de_obra[0], mao_de_obra[0]) for mao_de_obra in maos_de_obra]
+    equipamentos_choices = [(equipamento[0], equipamento[0]) for equipamento in equipamentos]
+    armazens_choices = [(armazem[0], armazem[0]) for armazem in armazens]
+
+    idmaodeobra = forms.ChoiceField(choices=maos_de_obra_choices, label='ID da Mão de Obra')
+    idequipamento = forms.ChoiceField(choices=equipamentos_choices, label='ID do Equipamento')
+    datahorainicio = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
+    datahorafim = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
+    idarmazem = forms.ChoiceField(choices=armazens_choices, label='ID do Armazém')
+    precomedio = forms.IntegerField()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahorainicio = cleaned_data.get('datahorainicio')
+        datahorafim = cleaned_data.get('datahorafim')
+
+        if datahorainicio:
+            cleaned_data['datahorainicio'] = datahorainicio.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorainicio'] = None
+
+        if datahorafim:
+            cleaned_data['datahorafim'] = datahorafim.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahorafim'] = None
+
+        return cleaned_data
+    
+class Detalhes_ficha_de_obraForm(forms.Form):
+    # Lógica para obter dinamicamente a lista de componentes usando SQL puro
+    componentes_query = "SELECT idcomponente, nomecomponente FROM componente"
+    with connection.cursor() as cursor:
+        cursor.execute(componentes_query)
+        componentes = cursor.fetchall()
+
+    # Criar lista de tuplas (idcomponente, nomecomponente) para usar como choices
+    componentes_choices = [(str(componente[0]), componente[1]) for componente in componentes]
+
+    # Lógica para obter dinamicamente a lista de armazéns usando SQL puro
+    armazens_query = "SELECT idarmazem, codigopostal FROM armazem"
+    with connection.cursor() as cursor:
+        cursor.execute(armazens_query)
+        armazens = cursor.fetchall()
+
+    # Criar lista de tuplas (idarmazem, codigopostal) para usar como choices
+    armazens_choices = [(str(armazem[0]), armazem[1]) for armazem in armazens]
+
+    idcomponente = forms.ChoiceField(choices=componentes_choices, label='Componente')
+    quantidade = forms.IntegerField()
+    idarmazem = forms.ChoiceField(choices=armazens_choices, label='Armazém')
+    datahoradetalhesfolhadeobra = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        datahoradetalhesfolhadeobra = cleaned_data.get('datahoradetalhesfolhadeobra')
+
+        if datahoradetalhesfolhadeobra:
+            cleaned_data['datahoradetalhesfolhadeobra'] = datahoradetalhesfolhadeobra.strftime('%Y-%m-%dT%H:%M:%S')
+        else:
+            cleaned_data['datahoradetalhesfolhadeobra'] = None
+
+        return cleaned_data
+    

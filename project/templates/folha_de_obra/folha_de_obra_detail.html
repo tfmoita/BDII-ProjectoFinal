@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalhes da Folha de Obra{% endblock %}
+
+{% block content %}
+  <div class="card">  
+    <div class="card-header">
+      <h3>Informações da Folha de Obra</h3>
+    </div> 
+    <div class="card-body">
+      <p><strong>ID da Folha de Obra:</strong> {{ folha_de_obra.idfolhadeobra }}</p>
+      <p><strong>Data e Hora de Início:</strong> {{ folha_de_obra.datahorainicio }}</p>
+      <p><strong>Data e Hora de Fim:</strong> {{ folha_de_obra.datahorafim }}</p>
+      <p><strong>Preço Médio:</strong> {{ folha_de_obra.precomedio }}</p>
+
+      <!-- Adicione outros campos conforme necessário -->
+
+      <!-- Detalhes da Folha de Obra -->
+      <h4>Detalhes da Folha de Obra</h4>
+      <ul>
+        {% for detalhe in folha_de_obra.detalhes_folha_de_obra %}
+          <li>
+            <p><strong>Componente:</strong> {{ detalhe.0 }}</p>
+            <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
+            <p><strong>Armazém:</strong> {{ detalhe.2 }}</p>
+            <p><strong>Data e Hora:</strong> {{ detalhe.3 }}</p>
+            <!-- Adicione outros campos conforme necessário -->
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card-footer d-flex">  
+      <a href="{% url 'folha_de_obra_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Folhas de Obra</a>
+      <div class="ml-auto">
+        <!-- Adicione links ou botões adicionais conforme necessário -->
+      </div>
+    </div>
+  </div>
+{% endblock %}
