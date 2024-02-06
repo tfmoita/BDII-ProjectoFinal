@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Importar Componentes{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h2 class="mt-4">Importar Componentes</h2>
+    <form method="post" enctype="multipart/form-data" class="mt-4">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="json_file">Selecione o arquivo JSON:</label>
+            <input type="file" name="json_file" class="form-control-file">
+        </div>
+        <button type="submit" class="btn btn-primary">Enviar</button>
+    </form>
+  </div>
+{% endblock %}

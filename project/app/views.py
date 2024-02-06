@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor, TrabalhadorOperario, MaoDeObra
 from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm, TrabalhadorOperarioForm, MaoDeObraForm
 from datetime import datetime
-
+import json
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db import connection, transaction
@@ -1574,3 +1574,23 @@ def mao_de_obra_delete(request, pk):
     except Exception as e:
         print(e)
         raise Http404("Erro ao processar a solicitação")
+    
+def exportar_pedidos_compra_json(_request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT get_pedido_compra_json(array_agg(idpedidocomprafornecedor)) FROM pedido_comprafornecedor")
+        pedidos_compra_json = cursor.fetchone()[0]
+    
+    response = HttpResponse(pedidos_compra_json, content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename="pedidos_compra.json"'
+    return response
+
+def importar_componentes(request):
+    if request.method == 'POST' and request.FILES.get('json_file'):
+        json_file = request.FILES['json_file'].read().decode('utf-8')
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT importar_componentes(%s)", [json_file])
+
+        return redirect('componente_list')
+
+    return render(request, 'componente/importar_componentes.html')

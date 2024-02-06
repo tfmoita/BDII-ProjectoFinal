@@ -32,6 +32,7 @@ urlpatterns = [
     path('componente/create/', views.componente_create, name='componente_create'),
     path('componente/<int:pk>/update/', views.componente_update, name='componente_update'),
     path('componente/<int:pk>/delete/', views.componente_delete, name='componente_delete'),
+    path('componente/importar_componentes/', views.importar_componentes, name='importar_componentes'),
 
     path('pedidoscomprafornecedor/', views.pedido_comprafornecedor_list, name='pedido_comprafornecedor_list'),
     path('pedidoscomprafornecedor/<int:pk>/', views.pedido_comprafornecedor_detail, name='pedido_comprafornecedor_detail'),
@@ -82,4 +83,7 @@ urlpatterns = [
     path('mao_de_obra/create/', views.mao_de_obra_create, name='mao_de_obra_create'),
     path('mao_de_obra/<int:pk>/update/', views.mao_de_obra_update, name='mao_de_obra_update'),
     path('mao_de_obra/<int:pk>/delete/', views.mao_de_obra_delete, name='mao_de_obra_delete'),
+
+    path('exportar_pedidos_compra_json/', views.exportar_pedidos_compra_json, name='exportar_pedidos_compra_json'),
+
 ]

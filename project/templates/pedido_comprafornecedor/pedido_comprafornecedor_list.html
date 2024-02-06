@@ -6,9 +6,15 @@
   <h2>Lista de Pedidos de Compra para Fornecedor</h2>
   <ul>
     {% for pedido_compra_fornecedor in pedidos_compra_fornecedor %}
-      <li><a href="{% url 'pedido_comprafornecedor_detail' pk=pedido_compra_fornecedor.idpedidocomprafornecedor %}">Pedido #{{ pedido_compra_fornecedor.datahorapedidofornecedor }}</a></li>
+      <li>
+        <a href="{% url 'pedido_comprafornecedor_detail' pk=pedido_compra_fornecedor.idpedidocomprafornecedor %}">
+          Pedido #{{ pedido_compra_fornecedor.datahorapedidofornecedor }}
+        </a>
+      </li>
     {% endfor %}
   </ul>
   <a type="button" class="btn btn-dark" href="{% url 'pedido_comprafornecedor_create' %}">Novo Pedido</a>
+
+  <!-- Botão para exportar o pedido de compra em JSON -->
+  <a type="button" class="btn btn-primary" href="{% url 'exportar_pedidos_compra_json' %}">Exportar para JSON</a>
 {% endblock %}
- 
