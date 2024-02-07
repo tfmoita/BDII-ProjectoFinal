@@ -1594,3 +1594,67 @@ def importar_componentes(request):
         return redirect('componente_list')
 
     return render(request, 'componente/importar_componentes.html')
+
+#view stock componentes
+
+def mostrar_stock_componentes(request):
+    with connection.cursor() as cursor:
+        # Consulta para obter as entradas de componentes
+        cursor.execute('SELECT * FROM entrada_componentes_fornecedor')
+        columns = [col[0] for col in cursor.description]
+        entradas_componentes = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'componente/stockcomponentes.html', {'entradas_componentes': entradas_componentes})
+
+def mostrar_saida_componentes_folha_de_obra(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM saida_componentes_folha_de_obra')
+        saida_componentes = cursor.fetchall()
+        print("Saída de componentes:", saida_componentes)
+
+    return render(request, 'componente/saida_componentes_folha_de_obra.html', {'saida_componentes': saida_componentes})
+
+def mostrar_stock_total_componentes(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM stock_componentesfinal')
+        total_componentes = cursor.fetchall()
+        print("Saída de componentes:", total_componentes)
+
+    return render(request, 'componente/total_componentes.html', {'total_componentes': total_componentes})
+
+def mostrar_stock_componentes_armazem(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM stock_componentes_armazem')
+        stock_componentes_armazem = cursor.fetchall()
+
+    return render(request, 'componente/stock_componentes_armazem.html', {'stock_componentes_armazem': stock_componentes_armazem})
+
+def mostrar_entrada_equipamentos(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM entrada_equipamentos_folhadeobra')
+        columns = [col[0] for col in cursor.description]
+        entradas_equipamentos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'equipamento/entradas_equipamentos.html', {'entradas_equipamentos': entradas_equipamentos})
+
+def mostrar_saida_equipamentos(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM saida_equipamentos_guia_remessa_cliente')
+        columns = [col[0] for col in cursor.description]
+        saida_equipamentos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'equipamento/saida_equipamentos.html', {'saida_equipamentos': saida_equipamentos})
+
+def mostrar_stock_equipamentos(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM stock_equipamentos_final')
+        stock_equipamentos = cursor.fetchall()
+
+    return render(request, 'equipamento/stock_equipamentos_final.html', {'stock_equipamentos': stock_equipamentos})
+
+def mostrar_stock_equipamentos_armazem(request):
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT * FROM stock_equipamentos_armazem')
+        stock_equipamentos_armazem = cursor.fetchall()
+
+    return render(request, 'equipamento/stock_equipamentos_armazem.html', {'stock_equipamentos_armazem': stock_equipamentos_armazem})

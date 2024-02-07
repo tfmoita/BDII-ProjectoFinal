@@ -1,0 +1,37 @@
+<!-- entrada_equipamentos.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}Entrada de Equipamentos{% endblock %}
+
+{% block content %}
+  <h2>Entrada de Equipamentos</h2>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID Folha de Obra</th>
+              <th>Equipamento</th>
+              <th>Quantidade</th>
+              <th>Armazém</th>
+              <th>Data e Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entrada in entradas_equipamentos %}
+              <tr>
+                <td>{{ entrada.idfolhadeobra }}</td>
+                <td>{{ entrada.nome_equipamento }}</td>
+                <td>{{ entrada.quantidade }}</td>
+                <td>{{ entrada.codigopostal }}</td>
+                <td>{{ entrada.datahora_entrada }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

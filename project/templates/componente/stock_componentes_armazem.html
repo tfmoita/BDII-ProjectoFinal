@@ -1,0 +1,37 @@
+<!-- stock_componentes_armazem.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}Stock de Componentes por Armazém{% endblock %}
+
+{% block content %}
+  <h2>Stock de Componentes por Armazém</h2>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Código Postal do Armazém</th>
+              <th>Nome do Componente</th>
+              <th>Entrada</th>
+              <th>Saída</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stock in stock_componentes_armazem %}
+              <tr>
+                <td>{{ stock.0 }}</td>
+                <td>{{ stock.1 }}</td>
+                <td>{{ stock.2 }}</td>
+                <td>{{ stock.3 }}</td>
+                <td>{{ stock.4 }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

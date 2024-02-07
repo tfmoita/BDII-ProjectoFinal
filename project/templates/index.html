@@ -8,12 +8,6 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Produção</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'folha_de_obra_list' %}">Gerir folhas de obra</a></li>
-          </ul> 
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>Vendas</b></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Criar Ordem de produção</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos: Clientes</a></li>
           </ul>
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Fornecedores</b></li>
@@ -34,12 +28,18 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Equipamentos</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'equipamento_list' %}">Gerir Equipamentos</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Equipamentos: Produção</li>
-            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Equipamentos: Stock</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_entrada_equipamentos' %}">Stock - Entrada de Equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_saida_equipamentos' %}">Stock - Saída de Equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_equipamentos' %}">Stock - Dados Gerais Equipamentos</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_equipamentos_armazem' %}">Stock - Dados De Armazéns</a></li>
           </ul>
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Componentes</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'componente_list' %}">Gerir Componentes</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_componentes' %}">Stock - Entrada de Componentes</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_saida_componentes_folha_de_obra' %}">Stock - Saída de Componentes</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_total_componentes' %}">Stock - Dados Gerais Componentes</a></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_componentes_armazem' %}">Stock - Dados De Armazéns</a></li>
           </ul>
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Pedidos de compra a Fornecedor</b></li>
@@ -67,14 +67,6 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><b>Faturas do Fornecedor</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'faturafornecedor_list' %}">Faturas de Fornecedor</a></li>
-          </ul>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>Listagens</b></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Componentes em stocks</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'login' %}">Equipamentos: Produção</li>
-            <li class="list-group-item">&emsp;<a href="{% url 'fornecedor_list' %}">Equipamentos: Stock</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos</a></li>
-            <li class="list-group-item">&emsp;<a href="{% url 'cliente_list' %}">Vendas equipamentos: Clientes</a></li>
           </ul>
     
     {% else %}

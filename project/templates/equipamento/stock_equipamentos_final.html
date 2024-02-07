@@ -1,0 +1,30 @@
+<!-- stock_equipamentos_final.html -->
+{% extends 'base.html' %}
+
+{% block title %}Stock de Equipamentos Final{% endblock %}
+
+{% block content %}
+  <h2>Stock de Equipamentos Final</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID do Equipamento</th>
+        <th>Nome do Equipamento</th>
+        <th>Entrada</th>
+        <th>Saída</th>
+        <th>Stock</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for equipamento in stock_equipamentos %}
+      <tr>
+        <td>{{ equipamento.0 }}</td>
+        <td>{{ equipamento.1 }}</td>
+        <td>{{ equipamento.2 }}</td>
+        <td>{{ equipamento.3 }}</td>
+        <td>{{ equipamento.4 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

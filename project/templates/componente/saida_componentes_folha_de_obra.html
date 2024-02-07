@@ -1,0 +1,28 @@
+<!-- saida_componentes_folha_de_obra.html -->
+{% extends 'base.html' %}
+
+{% block title %}Saída de Componentes na Folha de Obra{% endblock %}
+
+{% block content %}
+  <h2>Saída de Componentes na Folha de Obra</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID da Folha de Obra</th>
+        <th>ID do Componente</th>
+        <th>Nome do Componente</th>
+        <th>Quantidade Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for saida_componente in saida_componentes %}
+      <tr>
+        <td>{{ saida_componente.0 }}</td>
+        <td>{{ saida_componente.2 }}</td>
+        <td>{{ saida_componente.3 }}</td>
+        <td>{{ saida_componente.4 }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

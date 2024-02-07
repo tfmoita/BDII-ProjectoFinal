@@ -1,0 +1,28 @@
+<!-- saida_equipamentos_guiaremessacliente.html -->
+{% extends 'base.html' %}
+
+{% block title %}Saída de Equipamentos na Guia de Remessa do Cliente{% endblock %}
+
+{% block content %}
+  <h2>Saída de Equipamentos na Guia de Remessa do Cliente</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID da Guia de Remessa do Cliente</th>
+        <th>Nome do Equipamento</th>
+        <th>Quantidade Total</th>
+        <th>Data e Hora</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for saida in saida_equipamentos %}
+      <tr>
+        <td>{{ saida.id_guia_remessa_cliente }}</td>
+        <td>{{ saida.nome_equipamento }}</td>
+        <td>{{ saida.quantidade_total }}</td>
+        <td>{{ saida.data_hora|date:"Y-m-d H:i:s" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

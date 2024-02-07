@@ -26,6 +26,10 @@ urlpatterns = [
     path('equipamento/create/', views.equipamento_create, name='equipamento_create'),
     path('equipamento/<int:pk>/update/', views.equipamento_update, name='equipamento_update'),
     path('equipamento/<int:pk>/delete/', views.equipamento_delete, name='equipamento_delete'),
+    path('equipamento/mostrar_entrada_equipamentos/', views.mostrar_entrada_equipamentos, name='mostrar_entrada_equipamentos'),
+    path('equipamento/mostrar_saida_equipamentos/', views.mostrar_saida_equipamentos, name='mostrar_saida_equipamentos'),
+    path('equipamento/mostrar_stock_equipamentos/', views.mostrar_stock_equipamentos, name='mostrar_stock_equipamentos'),
+    path('equipamento/mostrar_stock_equipamentos_armazem/', views.mostrar_stock_equipamentos_armazem, name='mostrar_stock_equipamentos_armazem'),
 
     path('componentes/', views.componente_list, name='componente_list'),
     path('componente/<int:pk>/', views.componente_detail, name='componente_detail'),
@@ -33,6 +37,10 @@ urlpatterns = [
     path('componente/<int:pk>/update/', views.componente_update, name='componente_update'),
     path('componente/<int:pk>/delete/', views.componente_delete, name='componente_delete'),
     path('componente/importar_componentes/', views.importar_componentes, name='importar_componentes'),
+    path('componente/mostrar_stock_componentes/', views.mostrar_stock_componentes, name='mostrar_stock_componentes'),
+    path('componente/mostrar_saida_componentes_folha_de_obra/', views.mostrar_saida_componentes_folha_de_obra, name='mostrar_saida_componentes_folha_de_obra'),
+    path('componente/mostrar_stock_total_componentes/', views.mostrar_stock_total_componentes, name='mostrar_stock_total_componentes'),
+    path('componente/mostrar_stock_componentes_armazem/', views.mostrar_stock_componentes_armazem, name='mostrar_stock_componentes_armazem'),
 
     path('pedidoscomprafornecedor/', views.pedido_comprafornecedor_list, name='pedido_comprafornecedor_list'),
     path('pedidoscomprafornecedor/<int:pk>/', views.pedido_comprafornecedor_detail, name='pedido_comprafornecedor_detail'),
