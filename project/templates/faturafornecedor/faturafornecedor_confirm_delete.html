@@ -3,7 +3,7 @@
 {% block content %}
   <h2>Confirmar Exclusão</h2>
   <p>Tem certeza que deseja excluir a fatura do fornecedor com o ID {{ faturafornecedor.idfaturafornecedor }}?</p>
-  <form method="post" action="{% url 'faturafornecedor_delete' pk=faturafornecedor.idfaturafornecedor %}">
+  <form method="post" action="{% url 'faturafornecedor_delete' pk=pk %}">
     {% csrf_token %}
     <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
     <a type="button" class="btn btn-secondary btn-sm" href="{% url 'faturafornecedor_list' %}">Cancelar</a>

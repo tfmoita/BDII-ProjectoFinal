@@ -3,7 +3,7 @@
 {% block content %}
   <h2>Confirmar Exclusão</h2>
   <p>Tem a certeza que deseja excluir a mão de obra com o ID {{ mao_de_obra.idmaodeobra }}?</p>
-  <form method="post" action="{% url 'mao_de_obra_delete' pk=mao_de_obra.idmaodeobra %}">
+  <form method="post" action="{% url 'mao_de_obra_delete' pk=pk %}">
     {% csrf_token %}
     <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
     <a type="button" class="btn btn-secondary btn-sm" href="{% url 'mao_de_obra_list' %}">Cancelar</a>
