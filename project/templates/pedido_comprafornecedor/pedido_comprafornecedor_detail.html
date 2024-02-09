@@ -14,14 +14,14 @@
         <p><strong>Data e Hora do Pedido:</strong> {{ pedido_compra_fornecedor.datahorapedidofornecedor }}</p>
         <p><strong>Preço:</strong> {{ pedido_compra_fornecedor.preco }}</p>
 
-        <!-- Detalhes do Pedido -->
+        
         <h4>Detalhes do Pedido</h4>
         <ul>
           {% for detalhe in pedido_compra_fornecedor.detalhes_pedidocompra_fornecedor %}
             <li>
               <p><strong>Nome do Componente:</strong> {{ detalhe.2 }}</p>
               <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
-              <!-- Adicione outros campos conforme necessário -->
+              
             </li>
           {% endfor %}
         </ul>

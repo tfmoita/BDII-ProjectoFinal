@@ -418,32 +418,30 @@ class FaturafornecedorUpdateForm(forms.Form):
 
 
 class Folha_de_obraForm(forms.Form):
-
-    maos_de_obra_query = "SELECT idmaodeobra FROM mao_de_obra"
+    maos_de_obra_query = "SELECT idmaodeobra, tipodemaodeobra FROM mao_de_obra"
     with connection.cursor() as cursor:
         cursor.execute(maos_de_obra_query)
         maos_de_obra = cursor.fetchall()  
-   
-    equipamentos_query = "SELECT idequipamento FROM equipamento"
+
+    equipamentos_query = "SELECT idequipamento, nomeequipamento FROM equipamento"
     with connection.cursor() as cursor:
         cursor.execute(equipamentos_query)
         equipamentos = cursor.fetchall()  
     
-    armazens_query = "SELECT idarmazem FROM armazem"
+    armazens_query = "SELECT idarmazem, codigopostal FROM armazem"
     with connection.cursor() as cursor:
         cursor.execute(armazens_query)
         armazens = cursor.fetchall() 
 
-    
-    maos_de_obra_choices = [(mao_de_obra[0], mao_de_obra[0]) for mao_de_obra in maos_de_obra]
-    equipamentos_choices = [(equipamento[0], equipamento[0]) for equipamento in equipamentos]
-    armazens_choices = [(armazem[0], armazem[0]) for armazem in armazens]
+    maos_de_obra_choices = [(mao_de_obra[0], mao_de_obra[1]) for mao_de_obra in maos_de_obra]
+    equipamentos_choices = [(equipamento[0], equipamento[1]) for equipamento in equipamentos]
+    armazens_choices = [(armazem[0], armazem[1]) for armazem in armazens]
 
-    idmaodeobra = forms.ChoiceField(choices=maos_de_obra_choices, label='ID da Mão de Obra')
-    idequipamento = forms.ChoiceField(choices=equipamentos_choices, label='ID do Equipamento')
+    idmaodeobra = forms.ChoiceField(choices=maos_de_obra_choices, label='Tipo de Mão de Obra')
+    idequipamento = forms.ChoiceField(choices=equipamentos_choices, label='Nome do Equipamento')
     datahorainicio = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
     datahorafim = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}))
-    idarmazem = forms.ChoiceField(choices=armazens_choices, label='ID do Armazém')
+    idarmazem = forms.ChoiceField(choices=armazens_choices, label='Código Postal do Armazém')
     precomedio = forms.IntegerField()
 
     def clean(self):

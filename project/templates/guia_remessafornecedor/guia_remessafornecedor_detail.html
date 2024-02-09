@@ -14,7 +14,7 @@
 
         <p><strong>Pedido de Compra:</strong> <a href="{% url 'pedido_comprafornecedor_detail' pk=guia_remessa_fornecedor.idpedidocomprafornecedor %}">Ver Pedido de Compra</a></p>
         
-        <!-- Detalhes da Guia -->
+        
         <h4>Detalhes da Guia</h4>
         <ul>
           {% for detalhe in guia_remessa_fornecedor.detalhes_guiaremessafornecedor %}
@@ -22,7 +22,7 @@
               <p><strong>Nome do Componente:</strong> {{ detalhe.2 }}</p>
               <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
               <p><strong>Armazém:</strong> {{ detalhe.3 }}</p>
-              <!-- Adicione outros campos conforme necessário -->
+              
             </li>
           {% endfor %}
         </ul>
@@ -31,6 +31,7 @@
     <div class="card-footer d-flex">  
         <a href="{% url 'guia_remessafornecedor_list' %}" class="btn btn-secondary btn-sm">Voltar para a Lista de Guias</a>
         <div class="ml-auto">
+          <a href="{% url 'faturafornecedor_create' %}" class="btn btn-primary btn-sm">Criar Fatura Fornecedor</a>
           <a type="button" class="btn btn-danger btn-sm" href="{% url 'guia_remessafornecedor_delete' pk=guia_remessa_fornecedor.idguiaremessafornecedor %}">Excluir</a>
         </div>
     </div>

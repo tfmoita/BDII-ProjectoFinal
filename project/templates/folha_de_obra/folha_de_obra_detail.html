@@ -10,24 +10,24 @@
     </div> 
     <div class="card-body">
       <p><strong>ID da Folha de Obra:</strong> {{ folha_de_obra.idfolhadeobra }}</p>
-      <p><strong>Pedido de Compra:</strong> <a href="{% url 'equipamento_detail' pk=folha_de_obra.idequipamento %}">Ver Equipamento</a></p>
-      <p><strong>Pedido de Compra:</strong> <a href="{% url 'mao_de_obra_detail' pk=folha_de_obra.idmaodeobra %}">Ver Mão de Obra</a></p>
+      <p><strong>Equipamento:</strong> <a href="{% url 'equipamento_detail' pk=folha_de_obra.idequipamento %}">Ver Equipamento</a></p>
+      <p><strong>Mão de Obra:</strong> <a href="{% url 'mao_de_obra_detail' pk=folha_de_obra.idmaodeobra %}">Ver Mão de Obra</a></p>
       <p><strong>Data e Hora de Início:</strong> {{ folha_de_obra.datahorainicio }}</p>
       <p><strong>Data e Hora de Fim:</strong> {{ folha_de_obra.datahorafim }}</p>
       <p><strong>Preço Médio:</strong> {{ folha_de_obra.precomedio }}</p>
 
-      <!-- Adicione outros campos conforme necessário -->
+      
 
-      <!-- Detalhes da Folha de Obra -->
+      
       <h4>Detalhes da Folha de Obra</h4>
       <ul>
         {% for detalhe in folha_de_obra.detalhes_folha_de_obra %}
           <li>
-            <p><strong>Componente:</strong> {{ detalhe.0 }}</p>
+            <p><strong>Componente:</strong> {{ detalhe.2 }}</p>
             <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
-            <p><strong>Armazém:</strong> {{ detalhe.2 }}</p>
-            <p><strong>Data e Hora:</strong> {{ detalhe.3 }}</p>
-            <!-- Adicione outros campos conforme necessário -->
+            <p><strong>Armazém:</strong> {{ detalhe.5 }}</p>
+            <p><strong>Data e Hora:</strong> {{ detalhe.4 }}</p>
+            
           </li>
         {% endfor %}
       </ul>

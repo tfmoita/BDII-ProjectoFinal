@@ -10,7 +10,7 @@
     <div class="card-body">
         <p><strong>Guia de remessa:</strong> <a href="{% url 'guia_remessacliente_detail' pk=faturacliente.idguiaremessacliente %}">Ver Guia de remessa</a></p>
       <p><strong>Preço:</strong> € {{ faturacliente.preco }}</p>
-      <!-- Adicione outros campos conforme necessário -->
+      
     </div>
     <div class="card-footer d-flex">
       <a href="{% url 'faturacliente_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Faturas do Cliente</a>

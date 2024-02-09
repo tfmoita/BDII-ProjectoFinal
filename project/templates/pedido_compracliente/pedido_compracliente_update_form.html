@@ -9,7 +9,7 @@
     {{ form_pedido.idcliente}}
     {{ form_pedido.preco }}
 
-    <!-- Campos para detalhes existentes -->
+    
     {% for form in detalhes_forms %}
       <div class="detalhe">
         {{ form.idequipamento }}
@@ -17,7 +17,7 @@
       </div>
     {% endfor %}
 
-    <!-- Campos iniciais para um novo detalhe -->
+    
     <div id="detalhes">
       <div class="detalhe">
         {{ form_detalhes.idequipamento }}
@@ -34,7 +34,7 @@
       var detalhesDiv = document.getElementById('detalhes');
       var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);
 
-      // Atualiza os atributos 'name' e 'id' dos campos clonados para evitar conflitos
+      
       updateAttributes(novoDetalhe);
 
       detalhesDiv.appendChild(novoDetalhe);

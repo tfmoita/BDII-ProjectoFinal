@@ -92,5 +92,5 @@ urlpatterns = [
     path('mao_de_obra/<int:pk>/delete/', views.mao_de_obra_delete, name='mao_de_obra_delete'),
 
     path('exportar_pedidos_compra_json/', views.exportar_pedidos_compra_json, name='exportar_pedidos_compra_json'),
-
+    
 ]

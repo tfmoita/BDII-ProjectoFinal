@@ -1,4 +1,4 @@
-<!-- pedido_comprafornecedor_form.html -->
+
 
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
@@ -11,7 +11,7 @@
     {{ form_pedido.idfornecedor|as_crispy_field }}
     {{ form_pedido.preco|as_crispy_field }}
 
-    <!-- Campos iniciais para um detalhe -->
+    
     <div id="detalhes">
         <div class="detalhe">
             {{ form_detalhes.idcomponente|as_crispy_field }} {{ form_detalhes.quantidade|as_crispy_field }}
@@ -27,9 +27,9 @@
 
     function adicionarDetalhe() {
       var detalhesDiv = document.getElementById('detalhes');
-      var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);  // Clona o primeiro bloco de detalhes
+      var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);  
 
-      // Atualiza os atributos 'name' e 'id' dos campos clonados para evitar conflitos
+      
       updateAttributes(novoDetalhe);
 
       detalhesDiv.appendChild(novoDetalhe);

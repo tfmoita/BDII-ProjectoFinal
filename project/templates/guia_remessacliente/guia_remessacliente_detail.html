@@ -14,14 +14,14 @@
 
         <p><strong>Pedido de Compra:</strong> <a href="{% url 'pedido_compracliente_detail' pk=guia_remessa_cliente.idpedidocompracliente %}">Ver Pedido de Compra</a></p>
         
-        <!-- Detalhes da Guia -->
+        
         <h4>Detalhes da Guia</h4>
         <ul>
           {% for detalhe in guia_remessa_cliente.detalhes_guiaremessacliente %}
             <li>
               <p><strong>Nome do Equipamento:</strong> {{ detalhe.2 }}</p>
               <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
-              <!-- Adicione outros campos conforme necessário -->
+              
             </li>
           {% endfor %}
         </ul>

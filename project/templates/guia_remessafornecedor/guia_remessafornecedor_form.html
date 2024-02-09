@@ -8,7 +8,7 @@
     {% csrf_token %}
     {{ form_guia_remessa.idpedidocomprafornecedor|as_crispy_field }}
 
-    <!-- Campos iniciais para um detalhe -->
+    
     <div id="detalhes">
         <div class="detalhe">
           
@@ -30,7 +30,7 @@
     var detalhesDiv = document.getElementById('detalhes');
     var novoDetalhe = detalhesDiv.firstElementChild.cloneNode(true);
 
-    // Atualiza os atributos 'name' e 'id' dos campos clonados
+    
     updateAttributes(novoDetalhe);
 
     detalhesDiv.appendChild(novoDetalhe);
@@ -40,7 +40,7 @@
   function updateAttributes(element) {
     var inputs = element.querySelectorAll('input, select');
     inputs.forEach(function(input) {
-      // Atualiza o índice no nome e no id dos campos clonados
+      
       var newName = input.getAttribute('name').replace(/\d+/, contadorDetalhes);
       var newId = input.getAttribute('id').replace(/\d+/, contadorDetalhes);
       input.setAttribute('name', newName);

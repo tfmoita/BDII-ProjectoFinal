@@ -1,4 +1,4 @@
-<!-- trabalhador_operario_detail.html -->
+
 {% extends 'base.html' %}
 
 {% block title %}Informações do Trabalhador Operário - {{ trabalhador_operario.nome }}{% endblock %}
@@ -10,7 +10,7 @@
     </div>
     <div class="card-body">
       <p><strong>Email:</strong> {{ trabalhador_operario.email }}</p>
-      <!-- Adicione outros campos conforme necessário -->
+      
     </div>
     <div class="card-footer d-flex">
       <a href="{% url 'trabalhador_operario_list' %}" type="button" class="btn btn-secondary btn-sm">Voltar para a Lista de Trabalhadores Operários</a>

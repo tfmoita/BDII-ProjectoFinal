@@ -14,14 +14,14 @@
         <p><strong>Data e Hora do Pedido:</strong> {{ pedido_compra_cliente.datahorapedidocliente }}</p>
         <p><strong>Preço:</strong> {{ pedido_compra_cliente.preco }}</p>
 
-        <!-- Detalhes do Pedido -->
+        
         <h4>Detalhes do Pedido</h4>
         <ul>
           {% for detalhe in pedido_compra_cliente.detalhes_pedidocompra_cliente %}
             <li>
               <p><strong>Nome do Equipamento:</strong> {{ detalhe.2 }}</p>
               <p><strong>Quantidade:</strong> {{ detalhe.1 }}</p>
-              <!-- Adicione outros campos conforme necessário -->
+              
             </li>
           {% endfor %}
         </ul>
