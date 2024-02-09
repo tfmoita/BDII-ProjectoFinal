@@ -1,0 +1,39 @@
+<!-- equipamento_comercializacao_update.html -->
+
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Atualizar Equipamento{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>Atualizar Equipamento</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-group">
+        <label for="pgsnomeequipamento">Nome do Equipamento:</label>
+        <select class="form-control" id="nomeequipamento" name="nomeequipamento">
+          <option value="">Selecione um Equipamento</option>
+          {% for item in folhadeobra %}
+            <option value="{{ item.idequipamento }}" {% if item.idequipamento == equip.pgsidequipamento %} selected {% endif %}>{{ item.nomeequipamento }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="pgsprecomedio">Preço do Equipamento:</label>
+        <input type="text" class="form-control" id="pgsprecomedio" name="pgsprecomedio" value="{{ equip.pgsprecomedio }}">
+      </div>
+      <div class="form-group">
+        <label for="especificador">Especificador:</label>
+        <input type="text" class="form-control" id="especificador" name="especificador" value="{% for esp in equip.especificador %}{{ esp.tipo }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+      </div>
+    </div>
+    <div class="card-footer d-flex">
+      <a href="#" class="btn btn-secondary btn-sm">Voltar</a>
+      <div class="ml-auto">
+        <button type="submit" class="btn btn-primary btn-sm">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}

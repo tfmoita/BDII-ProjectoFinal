@@ -12,6 +12,8 @@ import json
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db import connection, transaction
+from utils import collection
+from bson import ObjectId
 
 def index(request):
     return render(request, 'index.html')
@@ -30,7 +32,6 @@ def fornecedor_list(request):
             'fornecedores': fornecedores,
             'user': request.user
         }
-
     return render(request, 'fornecedor/fornecedor_list.html', context)
 
 @permission_required('app.view_fornecedor')
@@ -1668,3 +1669,203 @@ def mostrar_stock_equipamentos_armazem(request):
         stock_equipamentos_armazem = cursor.fetchall()
 
     return render(request, 'equipamento/stock_equipamentos_armazem.html', {'stock_equipamentos_armazem': stock_equipamentos_armazem, 'user': request.user})
+
+def getCollection():
+    getter = collection.find({})
+    equips = []
+    for r in getter:
+        id = r['_id']
+        r['idmongo'] = id
+        equips.append(r) 
+    return equips
+
+def listaequipamentoscomercializacao(request):
+    getter = collection.find({})
+    equips = []
+    #print("Equipamentos para venda:\n")
+    for r in getter:
+        id = r['_id']
+        r['idmongo'] = id
+        equips.append(r) 
+    return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_list.html', {'equipamentos': equips})
+
+def listaequipamentoscomercializacaoclient(request):
+    getter = collection.find({})
+    equips = []
+    #print("Equipamentos para venda:\n")
+    for r in getter:
+        id = r['_id']
+        r['idmongo'] = id
+        equips.append(r) 
+    return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_client_list.html', {'equipamentos': equips})
+
+def getEquipsFolhaObra(query):
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        return cursor.fetchall() 
+
+def organizeDataStructureFolhadeObra(object):
+    documents = []
+    for i in object:
+        document = {
+            'idequipamento' : i[0],
+            'nomeequipamento': i[1],
+            'precomedio': i[2]
+        }
+        documents.append(document)
+    print('Folha de Obra: \n')
+    print(documents)
+    return documents
+
+def organizeDataStructureComponentes(object):
+    documents = []
+    for i in object:
+        document = {
+            'idequipamento' : i[0],
+            'idcomponente': i[1],
+            'nomecomponente': i[2],
+            'quantidade': i[3]
+        }
+        documents.append(document)
+    print('Componentes: \n')
+    print(documents)
+    return documents
+
+def prepareInsert(object, object2, string):
+    document = {
+        'pgsidequipamento' : object[0],
+        'pgsnomeequipamento': object[1],
+        'pgsidcomponente' : object2,
+        'pgsprecomedio' : object[2],
+        'especificador': [{'tipo' : string}]
+    }
+    print('###############################################')
+    print('############# INSERTING DOC ###################')
+    print('###############################################')
+    print("\n")
+    print(document)
+    print("\n")
+    print(document.get('pgsidequipamento'))
+    print("\n")
+    print(document.get('pgsnomeequipamento'))
+    print("\n")
+    print(document.get('pgsidcomponente'))
+    print("\n")
+    print(document.get('pgsprecomedio'))
+    print("\n")
+    print(document.get('especificador'))
+    print("\n")
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    return document
+
+def prepareComponentData(object):
+    documents = []
+    for i in object:
+        document = {
+            'idcomponente': i[0],
+            'nomecomponente': i[1],
+            'quantidade': i[2]
+        }
+        documents.append(document)
+    print('Componentes para Mongo: \n')
+    print(documents)
+    return documents
+
+
+def createequipamentoscomercializacao(request):
+    queryA = "SELECT f.idequipamento, e.nomeequipamento, f.precomedio FROM public.folha_de_obra f JOIN public.equipamento e ON f.idequipamento = e.idequipamento;"
+    folhadeobra = getEquipsFolhaObra(queryA)
+    folhadeobraOrganized = organizeDataStructureFolhadeObra(folhadeobra)
+    queryB = "SELECT f.idequipamento, d.idcomponente,c.nomecomponente, d.quantidade FROM public.folha_de_obra f JOIN public.detalhes_folha_de_obra d ON f.idfolhadeobra = d.idfolhadeobra JOIN public.componente c ON d.idcomponente = c.idcomponente;"
+    componentes = getEquipsFolhaObra(queryB)
+    componentesOrganized =  organizeDataStructureComponentes(componentes)
+
+    cursor = connection.cursor()
+
+    if request.method == 'POST':
+        idequipamento = request.POST.get('nomeequipamento')
+        tipo = request.POST.get('tipo')
+        cursor.execute("SELECT f.idequipamento, e.nomeequipamento, f.precomedio FROM public.folha_de_obra f JOIN public.equipamento e ON f.idequipamento = e.idequipamento WHERE f.idequipamento = %s", (idequipamento,))
+        dataA = cursor.fetchone()
+        cursor.execute("SELECT d.idcomponente, c.nomecomponente, d.quantidade FROM public.folha_de_obra f JOIN public.detalhes_folha_de_obra d ON f.idfolhadeobra = d.idfolhadeobra JOIN public.componente c ON d.idcomponente = c.idcomponente WHERE f.idequipamento = %s", (idequipamento,))
+        dataB = cursor.fetchall()
+        dataBA = prepareComponentData(dataB)
+        doc = prepareInsert(dataA, dataBA, tipo)
+        collection.insert_one(doc)
+
+    return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_create.html', {'folhadeobra': folhadeobraOrganized, 'componentes': componentesOrganized})
+
+
+def deleteequipamentocomercializacao(request, pk):
+    if request.method == 'POST':
+        delete = collection.find_one_and_delete({'_id': ObjectId(pk)})
+        print('##Deleted Object:\n')
+        print(delete)
+        equips = getCollection()
+        return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_list.html', {'equipamentos': equips})
+    elif request.method == 'GET':
+        return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_delete.html', {'pk': pk})
+    
+def prepareUpdate(id, nome, listacomponentes,precomedio, especificador):
+    document = {
+        'pgsidequipamento' : id,
+        'pgsnomeequipamento': nome,
+        'pgsidcomponente' : listacomponentes,
+        'pgsprecomedio' : precomedio,
+        'especificador': [{'tipo' : especificador}]
+    }
+    print('###############################################')
+    print('############# INSERTING DOC ###################')
+    print('###############################################')
+    print(document)
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    print('###############################################')
+    return document    
+    
+def editequipamentocomercializacao(request, pk):
+    equip = collection.find_one({'_id': ObjectId(pk)})
+    cursor = connection.cursor()
+    if request.method == 'POST':
+        idequipamento = request.POST.get('nomeequipamento')
+        tipo = request.POST.get('especificador')
+        especificador = []
+        especificador.append({'tipo': tipo})
+        precomedio = request.POST.get('pgsprecomedio')
+        cursor.execute("SELECT f.idequipamento, e.nomeequipamento, f.precomedio FROM public.folha_de_obra f JOIN public.equipamento e ON f.idequipamento = e.idequipamento WHERE f.idequipamento = %s", (idequipamento,))
+        dataA = cursor.fetchone()
+        cursor.execute("SELECT d.idcomponente, c.nomecomponente, d.quantidade FROM public.folha_de_obra f JOIN public.detalhes_folha_de_obra d ON f.idfolhadeobra = d.idfolhadeobra JOIN public.componente c ON d.idcomponente = c.idcomponente WHERE f.idequipamento = %s", (idequipamento,))
+        dataB = cursor.fetchall()
+        dataBA = prepareComponentData(dataB)
+
+        newid = { "$set": { "pgsidequipamento": idequipamento } }
+        newnome = { "$set": { "pgsnomeequipamento": dataA[1] } }
+        newpreco = { "$set": { "pgsnomeequipamento": dataA[2] } }
+        newespecificador = { "$set": { "especificador": especificador } }
+        newcomponents = { "$set": { "pgsidcomponente": dataBA } } 
+        collection.update_one({'_id': ObjectId(pk)},newid)
+        collection.update_one({'_id': ObjectId(pk)},newnome)
+        collection.update_one({'_id': ObjectId(pk)},newpreco)
+        collection.update_one({'_id': ObjectId(pk)},newcomponents)
+        collection.update_one({'_id': ObjectId(pk)},newespecificador)
+        equipss=getCollection()
+        return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_list.html', {'equipamentos': equipss})
+    else:
+        # If the request method is GET, render the template with the equipment details
+        queryA = "SELECT f.idequipamento, e.nomeequipamento, f.precomedio FROM public.folha_de_obra f JOIN public.equipamento e ON f.idequipamento = e.idequipamento;"
+        folhadeobra = getEquipsFolhaObra(queryA)
+        folhadeobraOrganized = organizeDataStructureFolhadeObra(folhadeobra)
+        equip = collection.find_one({'_id': ObjectId(pk)})
+        id = equip['_id']
+        equip['idmongo'] = id
+        print('este equip:\n')
+        print(equip)
+        return render(request, 'equipamentoscomercializacao/equipamento_comercializacao_update.html', {'equip': equip,"folhadeobra":folhadeobraOrganized})

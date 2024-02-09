@@ -1,0 +1,18 @@
+<!-- pedido_compracliente/pedido_compracliente_delete.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h2>Confirmar Exclusão</h2>
+    </div>
+    <div class="card-body">
+      <p>Tem a certeza que deseja excluir o equipamento de comercialização {{ idmongo }}?</p>
+      <form method="post" action="{% url 'equipamento_comercializacao_delete' pk=pk %}">
+        {% csrf_token %}
+        <button class="btn btn-danger btn-sm" type="submit">Sim, Excluir</button>
+        <a type="button" class="btn btn-secondary btn-sm" href="{% url 'pedido_compracliente_list' %}">Cancelar</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

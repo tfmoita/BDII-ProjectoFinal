@@ -1,0 +1,76 @@
+<!-- equipamento_comercializacao_list.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h3>Listagem de Equipamentos para Comercialização</h3>
+    </div>
+    <div class="card-body">
+      <!-- Button to add a new equipment -->
+      <div class="d-flex justify-content mb-3">
+        <a href="{% url 'create_equipamento_comercializacao' %}" class="btn btn-primary">Adicionar Novo</a>
+      </div>
+      <ul class="list-group">
+        {% for equip in equipamentos %}
+          <li class="list-group-item">
+            <h5 class="card-title">ID do Campo: {{ equip.pgsidequipamento }}</h5>
+            <p class="card-text"><strong>Nome do Equipamento:</strong> {{ equip.pgsnomeequipamento }}</p>
+            <p class="card-text"><strong>Preço do Equipamento:</strong> {{ equip.pgsprecomedio }}</p>
+            <!-- Button or arrow to toggle visibility of component list -->
+            <button type="button" class="btn btn-link toggle-components">
+              <i class="fas fa-chevron-down yellow-chevron"></i> <span>Mostrar Componentes</span>
+            </button>
+            <div class="component-list" style="display: none;"> <!-- Initially hidden -->
+              <p class="card-text"><strong>Componentes:</strong></p>
+              <ul class="list-group">
+                {% for componente in equip.pgsidcomponente %}
+                  <li class="list-group-item">
+                    <p><strong>Nome do Componente:</strong> {{ componente.nomecomponente }}</p>
+                    <p><strong>Quantidade:</strong> {{ componente.quantidade }}</p>
+                    <p><strong>ID do Componente:</strong> {{ componente.idcomponente }}</p>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            <p class="card-text"><strong>Especificador:</strong></p>
+            <ul class="list-group">
+              {% for especificador in equip.especificador %}
+                <li class="list-group-item">
+                  <p><strong>Tipo:</strong> {{ especificador.tipo }}</p>
+                </li>
+              {% endfor %}
+            </ul>
+            <!-- Div to wrap the Editar and Excluir buttons -->
+            <div class="d-flex justify-content-end align-items-center mt-3">
+              <a href="{% url 'equipamento_comercializacao_edit' pk=equip.idmongo %}" class="btn btn-warning btn-sm mr-2">Editar {{equip.idmongo}}</a>
+              <a href="{% url 'equipamento_comercializacao_delete' pk=equip.idmongo %}" class="btn btn-danger btn-sm mr-2">Excluir</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card-footer d-flex">  
+      <a href="{% url 'index' %}" class="btn btn-secondary btn-sm">Voltar para a Menu</a>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript to toggle visibility of component list
+    document.querySelectorAll('.toggle-components').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var componentList = this.nextElementSibling;
+        if (componentList.style.display === 'none') {
+          componentList.style.display = 'block';
+          this.querySelector('i').classList.replace('fa-chevron-down', 'fa-chevron-up');
+          this.querySelector('span').innerText = 'Esconder Componentes';
+        } else {
+          componentList.style.display = 'none';
+          this.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
+          this.querySelector('span').innerText = 'Mostrar Componentes';
+        }
+      });
+    });
+  </script>
+{% endblock %}

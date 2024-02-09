@@ -93,4 +93,9 @@ urlpatterns = [
 
     path('exportar_pedidos_compra_json/', views.exportar_pedidos_compra_json, name='exportar_pedidos_compra_json'),
     
+    path('equipamento_comercializacao/', views.listaequipamentoscomercializacao, name='equipamento_comercializacao_list'),
+    path('equipamento_comercializacao/list', views.listaequipamentoscomercializacaoclient, name='equipamento_comercializacao_client_list'),
+    path('equipamento_comercializacao/<str:pk>/delete/', views.deleteequipamentocomercializacao, name='equipamento_comercializacao_delete'),
+    path('equipamento_comercializacao/<str:pk>/edit/', views.editequipamentocomercializacao, name='equipamento_comercializacao_edit'),
+    path('equipamento_comercializacao/create/', views.createequipamentoscomercializacao, name='create_equipamento_comercializacao'),
 ]

@@ -1,0 +1,62 @@
+<!-- equipamento_comercializacao_update.html -->
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-header">
+      <h2>Atualizar Equipamento</h2>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'equipamento_comercializacao_edit' pk=equip.idmongo %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="pgsnomeequipamento">Nome do Equipamento:</label>
+           <select class="form-control" id="nomeequipamento" name="nomeequipamento">
+            <option value="">Selecione um Equipamento</option>
+            {% for item in folhadeobra %}
+              <option value="{{ item.idequipamento }}" data-preco="{{ item.precomedio }}">{{ item.nomeequipamento }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="pgsprecomedio">Preço do Equipamento:</label>
+          <input type="text" class="form-control" id="pgsprecomedio" name="pgsprecomedio" value="{{ equip.pgsprecomedio }}">
+        </div>
+        <div class="form-group">
+          <label for="especificador">Especificador:</label>
+          <input type="text" class="form-control" id="especificador" name="especificador" value="{% for esp in equip.especificador %}{{ esp.tipo }}{% if not forloop.last %}, {% endif %}{% endfor %}">
+        </div>
+        <hr>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var equipamentoSelect = document.getElementById('nomeequipamento');
+      var precoInput = document.getElementById('pgsprecomedio');
+  
+      equipamentoSelect.addEventListener('change', function() {
+        var selectedOption = equipamentoSelect.options[equipamentoSelect.selectedIndex];
+        var preco = selectedOption.getAttribute('data-preco');
+        precoInput.value = preco || '';
+      });
+  
+      // Trigger change event on page load to populate the price field if needed
+      equipamentoSelect.dispatchEvent(new Event('change'));
+  
+      // Set the initial selected option based on the equip ID
+      var equipId = "{{ equip.pgsidequipamento }}";
+      var equipPreco = "{{equip.pgsprecomedio}}"
+      precoInput.value = equipPreco;
+      for (var i = 0; i < equipamentoSelect.options.length; i++) {
+        if (equipamentoSelect.options[i].value === equipId) {
+          equipamentoSelect.selectedIndex = i;
+          break;
+        }
+      }
+    });
+  </script>
+{% endblock %}

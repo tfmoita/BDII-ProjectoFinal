@@ -1,0 +1,27 @@
+<!-- equipamento_comercializacao_create.html -->
+
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <h2>{{ action }} Equipamento para Comercialização</h2>
+  
+  <form method="post" id="equipamentoForm">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="nomeequipamento">Escolha o Equipamento:</label>
+      <select class="form-control" id="nomeequipamento" name="nomeequipamento">
+        <option value="">Selecione um Equipamento</option>
+        {% for item in folhadeobra %}
+          <option value="{{ item.idequipamento }}">{{ item.nomeequipamento }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="tipo">Tipo:</label>
+      <input type="text" class="form-control" id="tipo" name="tipo">
+    </div>
+
+    <input type="submit" href="equipamento_comercializacao_list" value="Adicionar">
+  </form>
+{% endblock %}
