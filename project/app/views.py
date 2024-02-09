@@ -1,21 +1,17 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.db import connection
 from django.db import transaction
 from django.http import Http404
 from django.http import JsonResponse
 from django.http import HttpResponse
 from .models import Fornecedor, Cliente, Equipamento, Componente, PedidoComprafornecedor, PedidoCompracliente, FolhaDeObra, DetalhesPedidocompracliente, Armazem, Faturacliente, GuiaRemessacliente, Faturafornecedor, TrabalhadorOperario, MaoDeObra
-from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm, TrabalhadorOperarioForm, MaoDeObraForm
-from datetime import datetime
+from .forms import FornecedorForm, ClienteForm, EquipamentoForm, PedidoCompraFornecedorForm, ComponenteForm, PedidoDetalhesForm, PedidoCompraClienteForm, DetalhesPedidocomprafornecedorForm, GuiaRemessafornecedorForm, DetalhesGuiaremessafornecedorForm, ArmazemForm, GuiaRemessaclienteForm, DetalhesGuiaremessaclienteForm, FaturaclienteForm, FaturaclienteUpdateForm, FaturafornecedorForm, FaturafornecedorUpdateForm, Folha_de_obraForm, Detalhes_ficha_de_obraForm, TrabalhadorOperarioForm, MaoDeObraForm, PedidoCompraClienteForm, PedidoDetalhesForm
 from django.contrib.auth.decorators import permission_required
 from django.db import connection
 import json
 from django.shortcuts import render, redirect
 from django.http import Http404
 from django.db import connection, transaction
-from .forms import PedidoCompraClienteForm, PedidoDetalhesForm
-from django.forms import formset_factory
-import logging
 
 def index(request):
     return render(request, 'index.html')
@@ -205,7 +201,7 @@ def cliente_update(request, pk):
                     
                     form = ClienteForm(request.POST)
                     if form.is_valid():
-                        # Se o formulário for válido, atualize os dados no banco
+                        
                         data = form.cleaned_data
                         with connection.cursor() as cursor:
                             cursor.execute("CALL sp_cliente_update(%s, %s, %s, %s, %s, %s)",
@@ -213,39 +209,39 @@ def cliente_update(request, pk):
                                             data['email'], data['nif'], data['codigopostal']])
                         return redirect('cliente_list')
                 else:
-                    # Se for uma requisição GET, renderize o formulário
+                    
                     return render(request, 'cliente/cliente_form.html', {'form': form, 'action': 'Atualizar', 'user': request.user})
             else:
                 raise Http404("Cliente does not exist")
 
     except Exception as e:
-        # Lide com exceções conforme necessário
-        print(e)  # Apenas para depuração, você pode usar um logger aqui
+        
+        print(e)  
         raise Http404("Erro ao processar a solicitação")
 
 @permission_required('app.delete_cliente')
 def cliente_delete(request, pk):
     try:
         with connection.cursor() as cursor:
-            # Verifica se o cliente existe
+            
             cursor.execute("CALL sp_cliente_read(%s, %s, %s, %s, %s, %s)", [pk, '', '', '', 0, ''])
             row = cursor.fetchone()
 
             if row:
                 if request.method == 'POST':
-                    # Executa o procedimento armazenado para deletar o cliente
+                    
                     with connection.cursor() as delete_cursor:
                         delete_cursor.execute("CALL sp_cliente_delete(%s)", [pk])
                     
                     return redirect('cliente_list')
                 else:
-                    # Se for uma requisição GET, renderiza a confirmação de exclusão
+                    
                     return render(request, 'cliente/cliente_confirm_delete.html', {'cliente': pk, 'user': request.user})
             else:
                 raise Http404("Cliente does not exist")
 
     except Exception as e:
-        print(e)  # Log do erro para depuração
+        print(e)  
         raise Http404("Erro ao processar a solicitação")
 
 
@@ -263,7 +259,7 @@ def equipamento_list(request):
 @permission_required('app.view_equipamento')
 def equipamento_detail(request, pk):
     with connection.cursor() as cursor:
-        cursor.execute("CALL sp_equipamento_read(%s, %s, %s)", [pk, '', ''])  # Ajuste conforme necessário
+        cursor.execute("CALL sp_equipamento_read(%s, %s, %s)", [pk, '', ''])  
         row = cursor.fetchone()
 
         if row:
@@ -271,7 +267,7 @@ def equipamento_detail(request, pk):
                 'nomeequipamento': row[0],
                 'descricao': row[1],
                 'idequipamento': pk
-                # Adicione outros campos conforme necessário
+                
             }
             return render(request, 'equipamento/equipamento_detail.html', {'equipamento': equipamento, 'user': request.user})
 
@@ -1574,7 +1570,7 @@ def mao_de_obra_delete(request, pk):
         raise Http404("Erro ao processar a solicitação")
 
 #view exportar json
-    
+#nao precisa de permissão pois está acopulada à permissao dos pedidos de compra. nao tem url proprio
 def exportar_pedidos_compra_json(_request):
     with connection.cursor() as cursor:
         cursor.execute("SELECT get_pedido_compra_json(array_agg(idpedidocomprafornecedor)) FROM pedido_comprafornecedor")
@@ -1586,6 +1582,7 @@ def exportar_pedidos_compra_json(_request):
 
 #view importar json
 
+@permission_required('app.can_import_componentes')
 def importar_componentes(request):
     if request.method == 'POST' and request.FILES.get('json_file'):
         json_file = request.FILES['json_file'].read().decode('utf-8')
@@ -1599,6 +1596,7 @@ def importar_componentes(request):
 
 #view stock componentes
 
+@permission_required('app.view_stockcomponentes')
 def mostrar_stock_componentes(request):
     with connection.cursor() as cursor:
         # Consulta para obter as entradas de componentes
@@ -1606,57 +1604,66 @@ def mostrar_stock_componentes(request):
         columns = [col[0] for col in cursor.description]
         entradas_componentes = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'componente/stockcomponentes.html', {'entradas_componentes': entradas_componentes})
+    return render(request, 'componente/stockcomponentes.html', {'entradas_componentes': entradas_componentes, 'user': request.user})
 
+@permission_required('app.view_stockcomponentes')
 def mostrar_saida_componentes_folha_de_obra(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM saida_componentes_folha_de_obra')
         saida_componentes = cursor.fetchall()
         print("Saída de componentes:", saida_componentes)
 
-    return render(request, 'componente/saida_componentes_folha_de_obra.html', {'saida_componentes': saida_componentes})
+    return render(request, 'componente/saida_componentes_folha_de_obra.html', {'saida_componentes': saida_componentes, 'user': request.user})
 
+@permission_required('app.view_stockcomponentes')
 def mostrar_stock_total_componentes(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM stock_componentesfinal')
         total_componentes = cursor.fetchall()
         print("Saída de componentes:", total_componentes)
 
-    return render(request, 'componente/total_componentes.html', {'total_componentes': total_componentes})
+    return render(request, 'componente/total_componentes.html', {'total_componentes': total_componentes, 'user': request.user})
 
+@permission_required('app.view_stockcomponentes')
 def mostrar_stock_componentes_armazem(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM stock_componentes_armazem')
         stock_componentes_armazem = cursor.fetchall()
 
-    return render(request, 'componente/stock_componentes_armazem.html', {'stock_componentes_armazem': stock_componentes_armazem})
+    return render(request, 'componente/stock_componentes_armazem.html', {'stock_componentes_armazem': stock_componentes_armazem, 'user': request.user})
 
+#views stock equipamentos
+
+@permission_required('app.view_stockequipamentos')
 def mostrar_entrada_equipamentos(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM entrada_equipamentos_folhadeobra')
         columns = [col[0] for col in cursor.description]
         entradas_equipamentos = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'equipamento/entradas_equipamentos.html', {'entradas_equipamentos': entradas_equipamentos})
+    return render(request, 'equipamento/entradas_equipamentos.html', {'entradas_equipamentos': entradas_equipamentos, 'user': request.user})
 
+@permission_required('app.view_stockequipamentos')
 def mostrar_saida_equipamentos(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM saida_equipamentos_guia_remessa_cliente')
         columns = [col[0] for col in cursor.description]
         saida_equipamentos = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'equipamento/saida_equipamentos.html', {'saida_equipamentos': saida_equipamentos})
+    return render(request, 'equipamento/saida_equipamentos.html', {'saida_equipamentos': saida_equipamentos, 'user': request.user})
 
+@permission_required('app.view_stockequipamentos')
 def mostrar_stock_equipamentos(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM stock_equipamentos_final')
         stock_equipamentos = cursor.fetchall()
 
-    return render(request, 'equipamento/stock_equipamentos_final.html', {'stock_equipamentos': stock_equipamentos})
+    return render(request, 'equipamento/stock_equipamentos_final.html', {'stock_equipamentos': stock_equipamentos, 'user': request.user})
 
+@permission_required('app.view_stockequipamentos')
 def mostrar_stock_equipamentos_armazem(request):
     with connection.cursor() as cursor:
         cursor.execute('SELECT * FROM stock_equipamentos_armazem')
         stock_equipamentos_armazem = cursor.fetchall()
 
-    return render(request, 'equipamento/stock_equipamentos_armazem.html', {'stock_equipamentos_armazem': stock_equipamentos_armazem})
+    return render(request, 'equipamento/stock_equipamentos_armazem.html', {'stock_equipamentos_armazem': stock_equipamentos_armazem, 'user': request.user})

@@ -30,11 +30,18 @@
               <a class="nav-link" href="{% url 'index' %}">Menu <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Link</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link disabled" href="#">Disabled</a>
-            </li>
+              <a class="nav-link" href="#">
+                  {% if user.is_authenticated %}
+                      Tipo de Utilizador:
+                      {% for group in user.groups.all %}
+                          {{ group.name }}
+                          {% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                  {% else %}
+                      Utilizador não autenticado
+                  {% endif %}
+              </a>
+          </li>
           </ul>
           <form class="form-inline my-2 my-lg-0">
             {% if user.is_authenticated %}

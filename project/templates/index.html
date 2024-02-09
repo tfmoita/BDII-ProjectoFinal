@@ -39,6 +39,11 @@
             {% if perms.app.view_equipamento %}
             <li class="list-group-item"><b>Equipamentos</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'equipamento_list' %}">Gerir Equipamentos</a></li>
+            {% endif %}
+          </ul>
+          <ul class="list-group list-group-flush">
+            {% if perms.app.view_stockequipamentos %}
+            <li class="list-group-item"><b>Stock de Equipamentos</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'mostrar_entrada_equipamentos' %}">Stock - Entrada de Equipamentos</a></li>
             <li class="list-group-item">&emsp;<a href="{% url 'mostrar_saida_equipamentos' %}">Stock - Saída de Equipamentos</a></li>
             <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_equipamentos' %}">Stock - Dados Gerais Equipamentos</a></li>
@@ -48,6 +53,12 @@
           <ul class="list-group list-group-flush">
             {% if perms.app.view_componente %}
             <li class="list-group-item"><b>Componentes</b></li>
+            <li class="list-group-item">&emsp;<a href="{% url 'componente_list' %}">Gerir Componentes</a></li>
+            {% endif %}
+          </ul>
+          <ul class="list-group list-group-flush"></ul>
+            {% if perms.app.view_view_stockcomponentes %}
+            <li class="list-group-item"><b>Stock de Componentes</b></li>
             <li class="list-group-item">&emsp;<a href="{% url 'componente_list' %}">Gerir Componentes</a></li>
             <li class="list-group-item">&emsp;<a href="{% url 'mostrar_stock_componentes' %}">Stock - Entrada de Componentes</a></li>
             <li class="list-group-item">&emsp;<a href="{% url 'mostrar_saida_componentes_folha_de_obra' %}">Stock - Saída de Componentes</a></li>

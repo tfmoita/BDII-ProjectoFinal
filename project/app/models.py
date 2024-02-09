@@ -214,3 +214,22 @@ class TrabalhadorOperario(models.Model):
     class Meta:
         managed = False
         db_table = 'trabalhador_operario'
+
+#permissoes para tipo de perfil de utilizador
+class ComponentePermission(models.Model):
+    class Meta:
+        permissions = [
+            ("can_import_componentes", "Can import componentes"),
+        ]
+
+class StockComponentePermission(models.Model):
+    class Meta:
+        permissions = [
+            ("view_stockcomponentes", "Can view stock componentes"),
+        ]
+
+class StockEquipamentoPermission(models.Model):
+    class Meta:
+        permissions = [
+            ("view_stockequipamentos", "Can view stock equipamentos"),
+        ]
